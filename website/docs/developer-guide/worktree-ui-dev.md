@@ -41,13 +41,13 @@ The Ink TUI has a dev path already: `hermes --tui --dev` runs the TypeScript sou
 ```bash
 htui() {
   local root
-  root="$(_hermes_root)" || { echo "htui: not in a Hermes checkout" >&2; return 1; }
+  root="$(_papylonation_root)" || { echo "htui: not in a Hermes checkout" >&2; return 1; }
   ( cd "$root" && PYTHONPATH="$root" \
-      "$HERMES_MAIN_CHECKOUT/.venv/bin/python" -m hermes_cli.main --tui --dev "$@" )
+      "$HERMES_MAIN_CHECKOUT/.venv/bin/python" -m papylonation_cli.main --tui --dev "$@" )
 }
 ```
 
-`--dev` compiles from source, so it links `ui-tui/node_modules` from `HERMES_MAIN_CHECKOUT` when the root lockfile matches and installs locally otherwise (see [`_hermes_root` / linking helpers](#shared-helpers)).
+`--dev` compiles from source, so it links `ui-tui/node_modules` from `HERMES_MAIN_CHECKOUT` when the root lockfile matches and installs locally otherwise (see [`_papylonation_root` / linking helpers](#shared-helpers)).
 
 :::warning `--dev` and `HERMES_TUI_DIR` are mutually exclusive
 `HERMES_TUI_DIR` points Hermes at a *prebuilt* bundle (Nix, system packages), which has no source to hot-reload. If it's set in your shell, `hermes --tui --dev` exits with an error. Run `unset HERMES_TUI_DIR` before `htui`.
@@ -60,14 +60,14 @@ The desktop app is heavier: it needs `node_modules` at both the repo root and `a
 ```bash
 hgui() {
   local root deps desktop
-  root="$(_hermes_root)" || { echo "hgui: not in a Hermes checkout" >&2; return 1; }
+  root="$(_papylonation_root)" || { echo "hgui: not in a Hermes checkout" >&2; return 1; }
   deps="${HERMES_GUI_DEPS_CHECKOUT:-$HERMES_MAIN_CHECKOUT}"
   desktop="$root/apps/desktop"
 
   # Borrow deps when locks match; otherwise install locally in the worktree.
   if cmp -s "$root/package-lock.json" "$deps/package-lock.json"; then
-    _hermes_link_deps "$desktop" "$deps/apps/desktop"
-    _hermes_link_deps "$root" "$deps"
+    _papylonation_link_deps "$desktop" "$deps/apps/desktop"
+    _papylonation_link_deps "$root" "$deps"
   else
     ( cd "$root" && npm ci ) || return 1
   fi
@@ -76,7 +76,7 @@ hgui() {
   lsof -t -i:5174 >/dev/null 2>&1 && killport 5174
 
   # Electron often survives Ctrl+C without reaping its ephemeral backends.
-  trap '_hermes_gui_cleanup "$root"' INT TERM EXIT
+  trap '_papylonation_gui_cleanup "$root"' INT TERM EXIT
 
   ( cd "$desktop"
     export PATH="$root/node_modules/.bin:$PATH"
@@ -108,25 +108,25 @@ Both functions resolve the enclosing checkout and link deps the same way:
 
 ```bash
 # The enclosing worktree, verified as a real Hermes checkout.
-_hermes_root() {
+_papylonation_root() {
   local root
   root="$(git rev-parse --show-toplevel 2>/dev/null)" || return 1
-  [[ -f "$root/hermes_cli/main.py" && -d "$root/ui-tui" ]] && print -r "$root"
+  [[ -f "$root/papylonation_cli/main.py" && -d "$root/ui-tui" ]] && print -r "$root"
 }
 
 # Symlink node_modules from the deps checkout — never over an existing tree.
-_hermes_link_deps() {
+_papylonation_link_deps() {
   local target="${1%/}" source="${2%/}"
   [[ -d "$source/node_modules" ]] || return 1
   [[ -e "$target/node_modules" ]] || ln -s "$source/node_modules" "$target/node_modules"
 }
 
 # Reap ephemeral backends Electron leaves behind on exit.
-_hermes_gui_cleanup() {
+_papylonation_gui_cleanup() {
   local root="$1"
   [[ -n "$root" ]] && pkill -TERM -f "${root}/apps/desktop/node_modules/electron" 2>/dev/null
   lsof -t -i:5174 >/dev/null 2>&1 && killport 5174
-  pgrep -f 'hermes_cli\.main.*dashboard.*--port 0' 2>/dev/null | xargs -r kill -TERM 2>/dev/null
+  pgrep -f 'papylonation_cli\.main.*dashboard.*--port 0' 2>/dev/null | xargs -r kill -TERM 2>/dev/null
 }
 ```
 

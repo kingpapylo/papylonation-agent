@@ -66,12 +66,12 @@ class TestWrapCommand:
         assert "source" in wrapped
         assert "cd -- /tmp" in wrapped or "cd -- '/tmp'" in wrapped
         assert "eval 'echo hello'" in wrapped
-        assert "__hermes_ec=$?" in wrapped
+        assert "__papylonation_ec=$?" in wrapped
         assert "export -p >" in wrapped
         # cwd travels via the stdout marker only — no temp-file write.
         assert "pwd -P >" not in wrapped
         assert env._cwd_marker in wrapped
-        assert "exit $__hermes_ec" in wrapped
+        assert "exit $__papylonation_ec" in wrapped
 
     def test_no_snapshot_skips_source(self):
         env = _TestableEnv()

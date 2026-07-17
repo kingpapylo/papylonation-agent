@@ -27,16 +27,16 @@ def curator_env(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-    import hermes_constants
-    importlib.reload(hermes_constants)
+    import papylonation_constants
+    importlib.reload(papylonation_constants)
     from agent import curator
     importlib.reload(curator)
-    from hermes_cli import main as hermes_main
-    importlib.reload(hermes_main)
+    from papylonation_cli import main as papylonation_main
+    importlib.reload(papylonation_main)
 
     yield {
         "curator": curator,
-        "main": hermes_main,
+        "main": papylonation_main,
         "capsys": capsys,
     }
 

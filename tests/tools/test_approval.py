@@ -12,7 +12,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 
 import tools.approval as approval_module
-from hermes_constants import get_hermes_home
+from papylonation_constants import get_papylonation_home
 from tools.approval import (
     _get_approval_mode,
     _normalize_approval_mode,
@@ -28,11 +28,11 @@ from tools.approval import (
 
 class TestApprovalModeParsing:
     def test_unquoted_yaml_off_boolean_false_maps_to_off(self):
-        with mock_patch("hermes_cli.config.load_config", return_value={"approvals": {"mode": False}}):
+        with mock_patch("papylonation_cli.config.load_config", return_value={"approvals": {"mode": False}}):
             assert _get_approval_mode() == "off"
 
     def test_string_off_still_maps_to_off(self):
-        with mock_patch("hermes_cli.config.load_config", return_value={"approvals": {"mode": "off"}}):
+        with mock_patch("papylonation_cli.config.load_config", return_value={"approvals": {"mode": "off"}}):
             assert _get_approval_mode() == "off"
 
     def test_valid_modes_pass_through(self):
@@ -59,7 +59,7 @@ class TestApprovalModeParsing:
 
 class TestSmartApproval:
     def test_smart_is_the_default_approval_mode(self):
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
 
         assert DEFAULT_CONFIG["approvals"]["mode"] == "smart"
 
@@ -556,7 +556,7 @@ class TestTeePattern:
         assert dangerous is True
         assert key is not None
 
-    def test_tee_hermes_env(self):
+    def test_tee_papylonation_env(self):
         dangerous, key, desc = detect_dangerous_command("echo x | tee ~/.hermes/.env")
         assert dangerous is True
         assert key is not None
@@ -567,12 +567,12 @@ class TestTeePattern:
         assert dangerous is True
         assert key is not None
 
-    def test_tee_custom_hermes_home_env(self):
+    def test_tee_custom_papylonation_home_env(self):
         dangerous, key, desc = detect_dangerous_command("echo x | tee $HERMES_HOME/.env")
         assert dangerous is True
         assert key is not None
 
-    def test_tee_quoted_custom_hermes_home_env(self):
+    def test_tee_quoted_custom_papylonation_home_env(self):
         dangerous, key, desc = detect_dangerous_command('echo x | tee "$HERMES_HOME/.env"')
         assert dangerous is True
         assert key is not None
@@ -623,23 +623,23 @@ class TestHermesConfigWriteProtection:
         dangerous, key, desc = detect_dangerous_command("sed --in-place 's/manual/off/' ~/.hermes/config.yaml")
         assert dangerous is True
 
-    def test_sed_in_place_absolute_hermes_home_config(self):
-        config_path = get_hermes_home() / "config.yaml"
+    def test_sed_in_place_absolute_papylonation_home_config(self):
+        config_path = get_papylonation_home() / "config.yaml"
         dangerous, key, desc = detect_dangerous_command(
             f"sed -i 's/manual/off/' {config_path}"
         )
         assert dangerous is True
         assert "hermes config" in desc.lower() or "in-place" in desc.lower()
 
-    def test_sed_in_place_absolute_hermes_home_env(self):
-        env_path = get_hermes_home() / ".env"
+    def test_sed_in_place_absolute_papylonation_home_env(self):
+        env_path = get_papylonation_home() / ".env"
         dangerous, key, desc = detect_dangerous_command(
             f"sed -i 's/API_KEY=.*/API_KEY=x/' {env_path}"
         )
         assert dangerous is True
         assert "hermes config" in desc.lower() or "in-place" in desc.lower()
 
-    def test_custom_hermes_home(self):
+    def test_custom_papylonation_home(self):
         dangerous, key, desc = detect_dangerous_command("echo x | tee $HERMES_HOME/config.yaml")
         assert dangerous is True
 
@@ -652,8 +652,8 @@ class TestHermesConfigWriteProtection:
         assert dangerous is True
         assert "in-place" in desc.lower() or "perl" in desc.lower()
 
-    def test_perl_in_place_absolute_hermes_home_config(self):
-        config_path = get_hermes_home() / "config.yaml"
+    def test_perl_in_place_absolute_papylonation_home_config(self):
+        config_path = get_papylonation_home() / "config.yaml"
         dangerous, key, desc = detect_dangerous_command(
             f"perl -i -pe 's/approvals.mode: on/approvals.mode: off/' {config_path}"
         )
@@ -666,8 +666,8 @@ class TestHermesConfigWriteProtection:
         )
         assert dangerous is True
 
-    def test_ruby_in_place_absolute_hermes_home_env(self):
-        env_path = get_hermes_home() / ".env"
+    def test_ruby_in_place_absolute_papylonation_home_env(self):
+        env_path = get_papylonation_home() / ".env"
         dangerous, key, desc = detect_dangerous_command(
             f"ruby -i -pe 'gsub(/API_KEY=.*/, \"API_KEY=x\")' {env_path}"
         )
@@ -749,7 +749,7 @@ class TestFindExecFullPathRm:
 class TestSensitiveRedirectPattern:
     """Detect shell redirection writes to sensitive user-managed paths."""
 
-    def test_redirect_to_custom_hermes_home_env(self):
+    def test_redirect_to_custom_papylonation_home_env(self):
         dangerous, key, desc = detect_dangerous_command("echo x > $HERMES_HOME/.env")
         assert dangerous is True
         assert key is not None
@@ -935,7 +935,7 @@ class TestSensitiveCopyMovePattern:
         dangerous, key, desc = detect_dangerous_command("cp /tmp/e ~/.bashrc")
         assert dangerous is True
 
-    def test_cp_to_hermes_config(self):
+    def test_cp_to_papylonation_config(self):
         dangerous, key, desc = detect_dangerous_command("cp /tmp/evil.yaml ~/.hermes/config.yaml")
         assert dangerous is True
 
@@ -992,7 +992,7 @@ class TestWindowsAbsolutePathFolding:
     (``C:\\Users\\alice\\.ssh\\authorized_keys``). Detection stripped backslash
     escapes *before* folding, dissolving those separators, so writes to startup,
     SSH, and Hermes config/env files returned "safe" without an approval prompt.
-    The OS-specific ``Path.home()`` / ``get_hermes_home()`` tests above only
+    The OS-specific ``Path.home()`` / ``get_papylonation_home()`` tests above only
     exercise this branch on a Windows host; these monkeypatch a Windows-style
     HOME/HERMES_HOME so the fold is verified on the POSIX CI runner too."""
 
@@ -1022,7 +1022,7 @@ class TestWindowsAbsolutePathFolding:
         assert dangerous is True
         assert key is not None
 
-    def test_windows_hermes_home_config_folds(self, monkeypatch):
+    def test_windows_papylonation_home_config_folds(self, monkeypatch):
         # Hermes home nests under the user home on Windows; it must fold before
         # the user-home rewrite eats its prefix.
         monkeypatch.setenv("HOME", r"C:\Users\tester")
@@ -1268,29 +1268,29 @@ class TestGatewayProtection:
     """Prevent agents from starting the gateway outside systemd management."""
 
     def test_gateway_run_with_disown_detected(self):
-        cmd = "kill 1605 && cd ~/.hermes/hermes-agent && source venv/bin/activate && python -m hermes_cli.main gateway run --replace &disown; echo done"
+        cmd = "kill 1605 && cd ~/.hermes/hermes-agent && source venv/bin/activate && python -m papylonation_cli.main gateway run --replace &disown; echo done"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "systemctl" in desc
 
     def test_gateway_run_with_ampersand_detected(self):
-        cmd = "python -m hermes_cli.main gateway run --replace &"
+        cmd = "python -m papylonation_cli.main gateway run --replace &"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
 
     def test_gateway_run_with_nohup_detected(self):
-        cmd = "nohup python -m hermes_cli.main gateway run --replace"
+        cmd = "nohup python -m papylonation_cli.main gateway run --replace"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
 
     def test_gateway_run_with_setsid_detected(self):
-        cmd = "hermes_cli.main gateway run --replace &disown"
+        cmd = "papylonation_cli.main gateway run --replace &disown"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
 
     def test_gateway_run_foreground_not_flagged(self):
         """Normal foreground gateway run (as in systemd ExecStart) is fine."""
-        cmd = "python -m hermes_cli.main gateway run --replace"
+        cmd = "python -m papylonation_cli.main gateway run --replace"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is False
 
@@ -1301,13 +1301,13 @@ class TestGatewayProtection:
         assert dangerous is True
         assert "stop/restart" in desc
 
-    def test_hermes_gateway_stop_detected(self):
+    def test_papylonation_gateway_stop_detected(self):
         cmd = "hermes gateway stop"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "gateway" in desc.lower()
 
-    def test_hermes_gateway_restart_with_profile_flag_detected(self):
+    def test_papylonation_gateway_restart_with_profile_flag_detected(self):
         """A profile flag between `hermes` and `gateway` must not slip past
         the guard. See the 2026-04-11 ade-profile self-kill incident."""
         cmd = "hermes -p ade gateway restart"
@@ -1315,35 +1315,35 @@ class TestGatewayProtection:
         assert dangerous is True
         assert "gateway" in desc.lower()
 
-    def test_hermes_gateway_stop_with_long_profile_flag_detected(self):
+    def test_papylonation_gateway_stop_with_long_profile_flag_detected(self):
         cmd = "hermes --profile ade gateway stop"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
 
-    def test_hermes_gateway_multiple_flags_detected(self):
+    def test_papylonation_gateway_multiple_flags_detected(self):
         cmd = "hermes -p cocoa --verbose gateway restart"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
 
-    def test_hermes_gateway_status_with_profile_flag_not_flagged(self):
+    def test_papylonation_gateway_status_with_profile_flag_not_flagged(self):
         """Read-only subcommands stay allowed even with a profile flag."""
         cmd = "hermes -p ade gateway status"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is False
 
-    def test_hermes_gateway_start_not_flagged(self):
+    def test_papylonation_gateway_start_not_flagged(self):
         cmd = "hermes gateway start"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is False
 
-    def test_pkill_hermes_detected(self):
+    def test_pkill_papylonation_detected(self):
         """pkill targeting hermes/gateway processes must be caught."""
         cmd = 'pkill -f "cli.py --gateway"'
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "self-termination" in desc
 
-    def test_killall_hermes_detected(self):
+    def test_killall_papylonation_detected(self):
         cmd = "killall hermes"
         dangerous, key, desc = detect_dangerous_command(cmd)
         assert dangerous is True
@@ -1587,7 +1587,7 @@ class TestPgrepKillExpansion:
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 
-    def test_pkill_hermes_still_detected(self):
+    def test_pkill_papylonation_still_detected(self):
         """Existing pkill pattern must not regress."""
         cmd = "pkill -9 hermes"
         dangerous, _, _ = detect_dangerous_command(cmd)
@@ -1603,7 +1603,7 @@ class TestPgrepKillExpansion:
         """`kill $(pidof hermes)` is the BSD/Linux equivalent of the
         pgrep expansion and bypasses the pkill/killall name pattern
         in the same way. See issue #33071."""
-        cmd = "kill -TERM $(pidof hermes_cli.main)"
+        cmd = "kill -TERM $(pidof papylonation_cli.main)"
         dangerous, _, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "pidof" in desc.lower() or "pgrep" in desc.lower()
@@ -1620,23 +1620,23 @@ class TestLaunchctlGatewayLifecycle:
     must require the same approval. See issue #33071.
     """
 
-    def test_launchctl_stop_hermes_detected(self):
+    def test_launchctl_stop_papylonation_detected(self):
         cmd = "launchctl stop ai.hermes.gateway"
         dangerous, _, desc = detect_dangerous_command(cmd)
         assert dangerous is True
         assert "launchd" in desc.lower() or "hermes" in desc.lower()
 
-    def test_launchctl_kickstart_hermes_detected(self):
+    def test_launchctl_kickstart_papylonation_detected(self):
         cmd = "launchctl kickstart -k system/ai.hermes.gateway"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 
-    def test_launchctl_bootout_hermes_detected(self):
+    def test_launchctl_bootout_papylonation_detected(self):
         cmd = "launchctl bootout system/ai.hermes.gateway"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
 
-    def test_launchctl_unload_hermes_detected(self):
+    def test_launchctl_unload_papylonation_detected(self):
         cmd = "launchctl unload ~/Library/LaunchAgents/ai.hermes.gateway.plist"
         dangerous, _, _ = detect_dangerous_command(cmd)
         assert dangerous is True
@@ -2424,7 +2424,7 @@ class TestTirithImportErrorFailOpenPolicy:
         }
         real_import = builtins.__import__
         with _patch("builtins.__import__", side_effect=self._make_failing_import(real_import)):
-            with _patch("hermes_cli.config.load_config", return_value=cfg):
+            with _patch("papylonation_cli.config.load_config", return_value=cfg):
                 with _patch("tools.approval.detect_dangerous_command", return_value=(False, None, None)):
                     with mock_patch.dict("os.environ", {"HERMES_INTERACTIVE": "1"}, clear=False):
                         result = check_all_command_guards("echo hello", "local")
@@ -2449,7 +2449,7 @@ class TestTirithImportErrorFailOpenPolicy:
 
         real_import = builtins.__import__
         with _patch("builtins.__import__", side_effect=self._make_failing_import(real_import)):
-            with _patch("hermes_cli.config.load_config", return_value=cfg):
+            with _patch("papylonation_cli.config.load_config", return_value=cfg):
                 with _patch("tools.approval.detect_dangerous_command", return_value=(False, None, None)):
                     with mock_patch.dict("os.environ", {"HERMES_INTERACTIVE": "1"}, clear=False):
                         result = check_all_command_guards(
@@ -2480,7 +2480,7 @@ class TestTirithImportErrorFailOpenPolicy:
         }
         real_import = builtins.__import__
         with _patch("builtins.__import__", side_effect=self._make_failing_import(real_import)):
-            with _patch("hermes_cli.config.load_config", return_value=cfg):
+            with _patch("papylonation_cli.config.load_config", return_value=cfg):
                 with _patch("tools.approval.detect_dangerous_command", return_value=(False, None, None)):
                     with mock_patch.dict("os.environ", {"HERMES_INTERACTIVE": "1"}, clear=False):
                         result = check_all_command_guards("echo hello", "local")
@@ -2549,7 +2549,7 @@ class TestApprovalPromptRedaction:
             "print(api_key)"
         )
         cfg = {"approvals": {"mode": "manual"}}
-        with _patch("hermes_cli.config.load_config", return_value=cfg):
+        with _patch("papylonation_cli.config.load_config", return_value=cfg):
             with _patch("tools.approval._is_gateway_approval_context",
                         return_value=True):
                 with _patch("tools.approval._get_approval_mode",

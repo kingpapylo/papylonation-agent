@@ -151,7 +151,7 @@ Set a username and password, then run the dashboard bound to a reachable address
 ```ini
 [Service]
 EnvironmentFile=%h/.hermes/.env
-ExecStart=/path/to/venv/bin/python -m hermes_cli.main dashboard \
+ExecStart=/path/to/venv/bin/python -m papylonation_cli.main dashboard \
     --host 0.0.0.0 --port 9119 --no-open
 ```
 
@@ -918,7 +918,7 @@ The provider implements the [Nous Portal OAuth contract v1](https://github.com/N
 2. Login page shows a "Continue with Nous Research" button → `/auth/login?provider=nous`.
 3. Server stashes PKCE state in a short-lived cookie, redirects user to `https://portal.nousresearch.com/oauth/authorize?…`.
 4. User authenticates with Portal, lands at `/auth/callback?code=…&state=…`.
-5. Server exchanges the code for an access token at `POST /api/oauth/token`, verifies the JWT signature against the Portal's JWKS (`/.well-known/jwks.json`), and sets the `hermes_session_at` cookie.
+5. Server exchanges the code for an access token at `POST /api/oauth/token`, verifies the JWT signature against the Portal's JWKS (`/.well-known/jwks.json`), and sets the `papylonation_session_at` cookie.
 6. User is redirected to `/` (or to the original deep-link path via the `next=` query parameter).
 
 Access tokens have a 15-minute TTL. **There is no refresh token in contract v1** — when the token expires, the SPA's fetch wrapper detects the 401 envelope and full-page-navigates back to `/login` to re-run the flow.
@@ -927,9 +927,9 @@ Access tokens have a 15-minute TTL. **There is no refresh token in contract v1**
 
 | Name | Lifetime | Notes |
 |------|----------|-------|
-| `hermes_session_at` | Token TTL (15 min) | HttpOnly, SameSite=Lax, Secure-when-HTTPS |
-| `hermes_session_pkce` | 10 min | HttpOnly; holds the PKCE verifier + provider hint during the round trip |
-| `hermes_session_rt` | unused in v1 | Reserved for forward-compat; not written when `refresh_token` is empty |
+| `papylonation_session_at` | Token TTL (15 min) | HttpOnly, SameSite=Lax, Secure-when-HTTPS |
+| `papylonation_session_pkce` | 10 min | HttpOnly; holds the PKCE verifier + provider hint during the round trip |
+| `papylonation_session_rt` | unused in v1 | Reserved for forward-compat; not written when `refresh_token` is empty |
 
 All three are `Path=/` and `SameSite=Lax`. The `Secure` flag is set when the dashboard is reached over HTTPS (detected via the request URL scheme — honours `X-Forwarded-Proto` from an upstream TLS terminator under `proxy_headers=True`).
 
@@ -947,7 +947,7 @@ To plug a non-Nous OAuth provider (e.g. Google, GitHub, custom OIDC), create a p
 
 ```python
 # ~/.hermes/plugins/dashboard-auth-myidp/__init__.py
-from hermes_cli.dashboard_auth import DashboardAuthProvider, Session, LoginStart
+from papylonation_cli.dashboard_auth import DashboardAuthProvider, Session, LoginStart
 
 class MyIdPProvider(DashboardAuthProvider):
     name = "myidp"
@@ -1082,7 +1082,7 @@ npm run dev
 
 The Vite dev server at `http://localhost:5173` proxies `/api` requests to the FastAPI backend at `http://127.0.0.1:9119`.
 
-The frontend is built with React 19, TypeScript, Tailwind CSS v4, and shadcn/ui-style components. Production builds output to `hermes_cli/web_dist/` which the FastAPI server serves as a static SPA.
+The frontend is built with React 19, TypeScript, Tailwind CSS v4, and shadcn/ui-style components. Production builds output to `papylonation_cli/web_dist/` which the FastAPI server serves as a static SPA.
 
 ## Automatic Build on Update
 

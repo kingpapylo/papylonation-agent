@@ -1,4 +1,4 @@
-"""Tests for hermes_constants module."""
+"""Tests for papylonation_constants module."""
 
 import os
 from pathlib import Path
@@ -6,69 +6,69 @@ from types import SimpleNamespace
 
 import pytest
 
-import hermes_constants
-from hermes_constants import (
+import papylonation_constants
+from papylonation_constants import (
     VALID_REASONING_EFFORTS,
     agent_browser_runnable,
-    find_hermes_node_executable,
+    find_papylonation_node_executable,
     find_node_executable,
     find_node_executable_on_path,
-    get_default_hermes_root,
-    get_hermes_dir,
-    get_hermes_home,
-    heal_hermes_managed_node,
-    hermes_managed_node_tree_present,
-    iter_hermes_node_dirs,
+    get_default_papylonation_root,
+    get_papylonation_dir,
+    get_papylonation_home,
+    heal_papylonation_managed_node,
+    papylonation_managed_node_tree_present,
+    iter_papylonation_node_dirs,
     is_container,
     node_tool_runnable,
     parse_reasoning_effort,
     secure_parent_dir,
-    with_hermes_node_path,
+    with_papylonation_node_path,
 )
 
 
 class TestGetDefaultHermesRoot:
-    """Tests for get_default_hermes_root() — Docker/custom deployment awareness."""
+    """Tests for get_default_papylonation_root() — Docker/custom deployment awareness."""
 
-    def test_no_hermes_home_returns_native(self, tmp_path, monkeypatch):
+    def test_no_papylonation_home_returns_native(self, tmp_path, monkeypatch):
         """When HERMES_HOME is not set, returns ~/.hermes."""
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        assert get_default_hermes_root() == tmp_path / ".hermes"
+        assert get_default_papylonation_root() == tmp_path / ".hermes"
 
-    def test_hermes_home_is_native(self, tmp_path, monkeypatch):
+    def test_papylonation_home_is_native(self, tmp_path, monkeypatch):
         """When HERMES_HOME = ~/.hermes, returns ~/.hermes."""
         native = tmp_path / ".hermes"
         native.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(native))
-        assert get_default_hermes_root() == native
+        assert get_default_papylonation_root() == native
 
-    def test_hermes_home_is_profile(self, tmp_path, monkeypatch):
+    def test_papylonation_home_is_profile(self, tmp_path, monkeypatch):
         """When HERMES_HOME is a profile under ~/.hermes, returns ~/.hermes."""
         native = tmp_path / ".hermes"
         profile = native / "profiles" / "coder"
         profile.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile))
-        assert get_default_hermes_root() == native
+        assert get_default_papylonation_root() == native
 
-    def test_hermes_home_is_docker(self, tmp_path, monkeypatch):
+    def test_papylonation_home_is_docker(self, tmp_path, monkeypatch):
         """When HERMES_HOME points outside ~/.hermes (Docker), returns HERMES_HOME."""
         docker_home = tmp_path / "opt" / "data"
         docker_home.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(docker_home))
-        assert get_default_hermes_root() == docker_home
+        assert get_default_papylonation_root() == docker_home
 
-    def test_hermes_home_is_custom_path(self, tmp_path, monkeypatch):
+    def test_papylonation_home_is_custom_path(self, tmp_path, monkeypatch):
         """Any HERMES_HOME outside ~/.hermes is treated as the root."""
         custom = tmp_path / "my-hermes-data"
         custom.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(custom))
-        assert get_default_hermes_root() == custom
+        assert get_default_papylonation_root() == custom
 
     def test_docker_profile_active(self, tmp_path, monkeypatch):
         """When a Docker profile is active (HERMES_HOME=<root>/profiles/<name>),
@@ -78,31 +78,31 @@ class TestGetDefaultHermesRoot:
         profile.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile))
-        assert get_default_hermes_root() == docker_root
+        assert get_default_papylonation_root() == docker_root
 
-    def test_no_hermes_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
+    def test_no_papylonation_home_returns_localappdata_root_on_windows(self, tmp_path, monkeypatch):
         """Native Windows falls back to %LOCALAPPDATA%\\hermes, not ~/.hermes."""
         local_appdata = tmp_path / "LocalAppData"
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.setenv("LOCALAPPDATA", str(local_appdata))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "Home")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
 
-        assert get_default_hermes_root() == local_appdata / "hermes"
+        assert get_default_papylonation_root() == local_appdata / "hermes"
 
-    def test_no_hermes_home_uses_windows_path_when_localappdata_missing(self, tmp_path, monkeypatch):
+    def test_no_papylonation_home_uses_windows_path_when_localappdata_missing(self, tmp_path, monkeypatch):
         """Windows fallback still uses AppData/Local/hermes without LOCALAPPDATA."""
         home = tmp_path / "Home"
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.setattr(Path, "home", lambda: home)
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
 
-        assert get_default_hermes_root() == home / "AppData" / "Local" / "hermes"
+        assert get_default_papylonation_root() == home / "AppData" / "Local" / "hermes"
 
 
 class TestGetHermesHome:
-    """Tests for get_hermes_home() platform-aware fallback."""
+    """Tests for get_papylonation_home() platform-aware fallback."""
 
     def test_windows_fallback_uses_localappdata(self, tmp_path, monkeypatch):
         """When HERMES_HOME is unset on Windows, use %LOCALAPPDATA%\\hermes."""
@@ -110,10 +110,10 @@ class TestGetHermesHome:
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.setenv("LOCALAPPDATA", str(local_appdata))
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "Home")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
-        monkeypatch.setattr(hermes_constants, "_profile_fallback_warned", False)
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants, "_profile_fallback_warned", False)
 
-        assert get_hermes_home() == local_appdata / "hermes"
+        assert get_papylonation_home() == local_appdata / "hermes"
 
 
 class TestHermesManagedNode:
@@ -123,10 +123,10 @@ class TestHermesManagedNode:
         bin_dir = node_dir / "bin"
         node_dir.mkdir(parents=True)
         bin_dir.mkdir()
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("HERMES_HOME", str(home))
 
-        assert iter_hermes_node_dirs() == [node_dir, bin_dir]
+        assert iter_papylonation_node_dirs() == [node_dir, bin_dir]
 
     def test_windows_finds_npm_cmd_before_path(self, tmp_path, monkeypatch):
         home = tmp_path / "hermes"
@@ -134,11 +134,11 @@ class TestHermesManagedNode:
         node_dir.mkdir(parents=True)
         npm_cmd = node_dir / "npm.cmd"
         npm_cmd.write_text("@echo off\n")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("HERMES_HOME", str(home))
-        monkeypatch.setattr(hermes_constants, "node_tool_runnable", lambda path: True)
+        monkeypatch.setattr(papylonation_constants, "node_tool_runnable", lambda path: True)
 
-        assert find_hermes_node_executable("npm") == str(npm_cmd)
+        assert find_papylonation_node_executable("npm") == str(npm_cmd)
 
     def test_windows_path_fallback_prefers_npm_cmd(self, tmp_path, monkeypatch):
         bin_dir = tmp_path / "nodejs"
@@ -149,7 +149,7 @@ class TestHermesManagedNode:
         extensionless.write_text("#!/usr/bin/env node\n")
         powershell.write_text("Write-Output npm\n")
         npm_cmd.write_text("@echo off\n")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("PATH", str(bin_dir))
 
         assert find_node_executable_on_path("npm") == str(npm_cmd)
@@ -163,7 +163,7 @@ class TestHermesManagedNode:
         npm_cmd = bin_dir / "npm.cmd"
         extensionless.write_text("#!/usr/bin/env node\n")
         npm_cmd.write_text("@echo off\n")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("HERMES_HOME", str(home))
         monkeypatch.setenv("PATH", str(bin_dir))
 
@@ -178,31 +178,31 @@ class TestHermesManagedNode:
         bin_dir.mkdir()
         path_npm = bin_dir / "npm.cmd"
         path_npm.write_text("@echo off\n")
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("HERMES_HOME", str(home))
         monkeypatch.setenv("PATH", str(bin_dir))
-        monkeypatch.setattr(hermes_constants, "_managed_node_heal_attempted", False)
-        monkeypatch.setattr(hermes_constants, "heal_hermes_managed_node", lambda: False)
+        monkeypatch.setattr(papylonation_constants, "_managed_node_heal_attempted", False)
+        monkeypatch.setattr(papylonation_constants, "heal_papylonation_managed_node", lambda: False)
         monkeypatch.setattr(
-            hermes_constants,
+            papylonation_constants,
             "node_tool_runnable",
             lambda path: False,
         )
 
-        assert hermes_managed_node_tree_present() is True
+        assert papylonation_managed_node_tree_present() is True
         assert find_node_executable("npm") is None
         assert find_node_executable("npm") != str(path_npm)
 
-    def test_with_hermes_node_path_prepends_existing_managed_dirs(self, tmp_path, monkeypatch):
+    def test_with_papylonation_node_path_prepends_existing_managed_dirs(self, tmp_path, monkeypatch):
         home = tmp_path / "hermes"
         node_dir = home / "node"
         bin_dir = node_dir / "bin"
         node_dir.mkdir(parents=True)
         bin_dir.mkdir()
-        monkeypatch.setattr(hermes_constants.sys, "platform", "win32")
+        monkeypatch.setattr(papylonation_constants.sys, "platform", "win32")
         monkeypatch.setenv("HERMES_HOME", str(home))
 
-        env = with_hermes_node_path({"PATH": "system-node"})
+        env = with_papylonation_node_path({"PATH": "system-node"})
         parts = env["PATH"].split(os.pathsep)
 
         assert parts[:2] == [str(node_dir), str(bin_dir)]
@@ -246,7 +246,7 @@ class TestNodeToolRunnable:
 
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         monkeypatch.setenv("PATH", str(system_bin))
-        monkeypatch.setattr(hermes_constants, "_managed_node_heal_attempted", False)
+        monkeypatch.setattr(papylonation_constants, "_managed_node_heal_attempted", False)
 
         def _heal():
             heal_called["value"] = True
@@ -254,7 +254,7 @@ class TestNodeToolRunnable:
             broken_npm.chmod(0o755)
             return True
 
-        monkeypatch.setattr(hermes_constants, "heal_hermes_managed_node", _heal)
+        monkeypatch.setattr(papylonation_constants, "heal_papylonation_managed_node", _heal)
 
         resolved = find_node_executable("npm")
         assert heal_called["value"] is True
@@ -274,16 +274,16 @@ class TestNodeToolRunnable:
 
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         monkeypatch.setenv("PATH", str(system_bin))
-        monkeypatch.setattr(hermes_constants, "_managed_node_heal_attempted", False)
+        monkeypatch.setattr(papylonation_constants, "_managed_node_heal_attempted", False)
 
         def _heal():
             broken_npm.write_text(healed_npm.read_text())
             broken_npm.chmod(0o755)
             return True
 
-        monkeypatch.setattr(hermes_constants, "heal_hermes_managed_node", _heal)
+        monkeypatch.setattr(papylonation_constants, "heal_papylonation_managed_node", _heal)
 
-        assert find_hermes_node_executable("npm") == str(healed_npm)
+        assert find_papylonation_node_executable("npm") == str(healed_npm)
         assert find_node_executable("npm") == str(healed_npm)
         assert find_node_executable("npm") != str(good_npm)
 
@@ -299,8 +299,8 @@ class TestNodeToolRunnable:
 
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         monkeypatch.setenv("PATH", str(system_bin))
-        monkeypatch.setattr(hermes_constants, "_managed_node_heal_attempted", False)
-        monkeypatch.setattr(hermes_constants, "heal_hermes_managed_node", lambda: False)
+        monkeypatch.setattr(papylonation_constants, "_managed_node_heal_attempted", False)
+        monkeypatch.setattr(papylonation_constants, "heal_papylonation_managed_node", lambda: False)
 
         assert find_node_executable("npm") is None
 
@@ -325,7 +325,7 @@ class TestIsContainer:
 
     def _reset_cache(self, monkeypatch):
         """Reset the cached detection result before each test."""
-        monkeypatch.setattr(hermes_constants, "_container_detected", None)
+        monkeypatch.setattr(papylonation_constants, "_container_detected", None)
 
     def test_detects_dockerenv(self, monkeypatch, tmp_path):
         """/.dockerenv triggers container detection."""
@@ -417,7 +417,7 @@ class TestIsContainer:
 
     def test_caches_result(self, monkeypatch):
         """Second call uses cached value without re-probing."""
-        monkeypatch.setattr(hermes_constants, "_container_detected", True)
+        monkeypatch.setattr(papylonation_constants, "_container_detected", True)
         assert is_container() is True
         # Even if we make os.path.exists return False, cached value wins
         monkeypatch.setattr(os.path, "exists", lambda p: False)
@@ -504,39 +504,39 @@ class TestResolvePerModelReasoningEffort:
 
     def test_exact_match(self):
         """Exact model string match returns the parsed override."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "xhigh"}
         result = resolve_per_model_reasoning_effort("claude-opus-4.5", overrides)
         assert result == {"enabled": True, "effort": "xhigh"}
 
     def test_none_when_no_matching_key(self):
         """Model not in overrides returns None (caller falls back to global)."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "xhigh"}
         assert resolve_per_model_reasoning_effort("gpt-5", overrides) is None
 
     def test_none_value_returns_disabled(self):
         """Override set to 'none' returns {'enabled': False}."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "none"}
         result = resolve_per_model_reasoning_effort("claude-opus-4.5", overrides)
         assert result == {"enabled": False}
 
     def test_invalid_value_returns_none(self):
         """Override with invalid effort falls back to None (global)."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "banana"}
         assert resolve_per_model_reasoning_effort("claude-opus-4.5", overrides) is None
 
     def test_none_or_empty_overrides_returns_none(self):
         """None or empty overrides dict returns None."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         assert resolve_per_model_reasoning_effort("claude-opus-4.5", None) is None
         assert resolve_per_model_reasoning_effort("claude-opus-4.5", {}) is None
 
     def test_empty_model_returns_none(self):
         """Empty model string returns None."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         assert resolve_per_model_reasoning_effort("", {"gpt-5": "low"}) is None
 
     # --- Spelling tolerance layer ---
@@ -547,14 +547,14 @@ class TestResolvePerModelReasoningEffort:
         normalize_model_for_provider converts claude-opus-4.5 → claude-opus-4-5
         for the anthropic provider. The user's override key should still match.
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "xhigh"}
         result = resolve_per_model_reasoning_effort("claude-opus-4-5", overrides)
         assert result == {"enabled": True, "effort": "xhigh"}
 
     def test_dashes_to_dots_variant(self):
         """User wrote key with dashes; input comes in with dots."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4-5": "high"}
         result = resolve_per_model_reasoning_effort("claude-opus.4.5", overrides)
         assert result == {"enabled": True, "effort": "high"}
@@ -565,7 +565,7 @@ class TestResolvePerModelReasoningEffort:
         E.g. user config: model.default: claude-opus-4.5 (no prefix),
         but override key: anthropic/claude-opus-4.5.
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"anthropic/claude-opus-4.5": "high"}
         result = resolve_per_model_reasoning_effort("claude-opus-4.5", overrides)
         assert result == {"enabled": True, "effort": "high"}
@@ -576,7 +576,7 @@ class TestResolvePerModelReasoningEffort:
         E.g. user config: model.default: anthropic/claude-opus-4.5,
         but override key: claude-opus-4.5 (no prefix).
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "high"}
         result = resolve_per_model_reasoning_effort("anthropic/claude-opus-4.5", overrides)
         assert result == {"enabled": True, "effort": "high"}
@@ -588,7 +588,7 @@ class TestResolvePerModelReasoningEffort:
         creating a triple-prefix. The resolver strips the aggregator
         layer to find the user's two-segment key.
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"anthropic/claude-opus-4.5": "xhigh"}
         result = resolve_per_model_reasoning_effort("openrouter/anthropic/claude-opus-4.5", overrides)
         assert result == {"enabled": True, "effort": "xhigh"}
@@ -599,14 +599,14 @@ class TestResolvePerModelReasoningEffort:
         If both 'claude-opus-4.5' (exact) and 'claude-opus-4-5' (dashes
         variant) are keys, the exact input matches the exact key first.
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "high", "claude-opus-4-5": "xhigh"}
         result = resolve_per_model_reasoning_effort("claude-opus-4.5", overrides)
         assert result == {"enabled": True, "effort": "high"}
 
     def test_none_when_no_variant_matches(self):
         """All variants exhausted without a match returns None."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"gpt-5": "low"}
         assert resolve_per_model_reasoning_effort("claude-opus-4.5", overrides) is None
 
@@ -618,7 +618,7 @@ class TestResolvePerModelReasoningEffort:
         all_dashed = model.replace('.', '-') collapsed version dots,
         making the canonical form unreachable from all-dotted input.
         """
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"claude-opus-4.5": "xhigh"}
         result = resolve_per_model_reasoning_effort("claude-opus.4.5", overrides)
         assert result is not None
@@ -626,7 +626,7 @@ class TestResolvePerModelReasoningEffort:
 
     def test_different_models_do_not_match(self):
         """No false positives: gemini-2.0-flash must not match gemini-flash."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         overrides = {"gemini-flash": "low"}
         assert resolve_per_model_reasoning_effort("gemini-2.0-flash", overrides) is None
 
@@ -650,20 +650,20 @@ class TestResolveReasoningConfig:
         }
 
     def test_per_model_override_wins(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(overrides={"claude-opus-4.5": "xhigh"})
         result = resolve_reasoning_config(cfg, "claude-opus-4.5")
         assert result == {"enabled": True, "effort": "xhigh"}
 
     def test_global_fallback_when_no_override(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort="low", overrides={"claude-opus-4.5": "xhigh"})
         assert resolve_reasoning_config(cfg, "gpt-5") == {"enabled": True, "effort": "low"}
 
     def test_explicit_model_wins_over_config_default(self):
         """The session's effective model (e.g. after a session-only /model
         switch) must be used for override lookup — NOT model.default."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(
             effort="medium",
             overrides={"gpt-5": "low", "claude-opus-4.5": "xhigh"},
@@ -674,13 +674,13 @@ class TestResolveReasoningConfig:
         assert result == {"enabled": True, "effort": "xhigh"}
 
     def test_empty_model_derives_from_config_default(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(overrides={"gpt-5": "high"}, default_model="gpt-5")
         assert resolve_reasoning_config(cfg) == {"enabled": True, "effort": "high"}
 
     def test_empty_model_derives_from_model_alias_key(self):
         """model: {model: ...} alias shape (older configs) also resolves."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = {
             "model": {"model": "gpt-5"},
             "agent": {"reasoning_effort": "medium", "reasoning_overrides": {"gpt-5": "high"}},
@@ -689,7 +689,7 @@ class TestResolveReasoningConfig:
 
     def test_string_model_section(self):
         """Top-level ``model: <string>`` config shape (cron raw-YAML path)."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = {
             "model": "claude-opus-4.5",
             "agent": {"reasoning_effort": "low", "reasoning_overrides": {"claude-opus-4.5": "xhigh"}},
@@ -698,41 +698,41 @@ class TestResolveReasoningConfig:
 
     def test_yaml_false_global_uncoerced(self):
         """YAML boolean False must mean disabled — never coerced to ''."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort=False)
         assert resolve_reasoning_config(cfg, "gpt-5") == {"enabled": False}
 
     def test_yaml_false_not_shadowed_by_other_models_override(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort=False, overrides={"claude-opus-4.5": "xhigh"})
         assert resolve_reasoning_config(cfg, "gpt-5") == {"enabled": False}
 
     def test_override_none_disables_for_model(self):
         """Per-model override value 'none' disables thinking for that model."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort="high", overrides={"gemini-flash": "none"})
         assert resolve_reasoning_config(cfg, "gemini-flash") == {"enabled": False}
 
     def test_unknown_global_returns_none(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort="bogus-level")
         assert resolve_reasoning_config(cfg, "gpt-5") is None
 
     def test_empty_config_returns_none(self):
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         assert resolve_reasoning_config({}) is None
         assert resolve_reasoning_config(None) is None
 
     def test_malformed_sections_tolerated(self):
         """Non-dict agent/model sections must not raise."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         assert resolve_reasoning_config({"agent": "oops", "model": 42}) is None
         assert resolve_reasoning_config({"agent": None, "model": None}) is None
         assert resolve_reasoning_config({"agent": {"reasoning_overrides": "bad"}}) is None
 
     def test_invalid_override_value_falls_back_to_global(self):
         """A junk override value for the matching model falls through to global."""
-        from hermes_constants import resolve_reasoning_config
+        from papylonation_constants import resolve_reasoning_config
         cfg = self._cfg(effort="medium", overrides={"gpt-5": "turbo-max"})
         assert resolve_reasoning_config(cfg, "gpt-5") == {"enabled": True, "effort": "medium"}
 
@@ -742,14 +742,14 @@ class TestReasoningOverridesDefaultConfig:
 
     def test_default_config_has_reasoning_overrides_key(self):
         """DEFAULT_CONFIG['agent'] contains 'reasoning_overrides' as an empty dict."""
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
         assert "reasoning_overrides" in DEFAULT_CONFIG["agent"]
         assert DEFAULT_CONFIG["agent"]["reasoning_overrides"] == {}
 
     def test_load_config_preserves_user_reasoning_overrides(self, tmp_path, monkeypatch):
         """User-added reasoning_overrides are preserved through load_config()."""
         import yaml
-        from hermes_cli.config import load_config, get_config_path
+        from papylonation_cli.config import load_config, get_config_path
 
         user_config = {
             "agent": {
@@ -775,7 +775,7 @@ class TestReasoningOverridesDefaultConfig:
 
     def test_spelling_tolerant_lookup_works_with_user_config(self):
         """resolve_per_model_reasoning_effort works with user-added overrides."""
-        from hermes_constants import resolve_per_model_reasoning_effort
+        from papylonation_constants import resolve_per_model_reasoning_effort
         # User config with one override, query uses different spelling
         overrides = {
             "anthropic/claude-opus-4.5": "xhigh",  # user wrote with dots
@@ -933,7 +933,7 @@ class TestAgentBrowserRunnable:
             captured.append((cmd, kwargs))
             return SimpleNamespace(returncode=0)
 
-        import hermes_cli._subprocess_compat as subprocess_compat
+        import papylonation_cli._subprocess_compat as subprocess_compat
         import subprocess as subprocess_mod
 
         monkeypatch.setattr(subprocess_compat, "windows_hide_flags", lambda: 0x08000000)
@@ -952,7 +952,7 @@ class TestAgentBrowserRunnable:
             captured.append((cmd, kwargs))
             return SimpleNamespace(returncode=0)
 
-        import hermes_cli._subprocess_compat as subprocess_compat
+        import papylonation_cli._subprocess_compat as subprocess_compat
         import subprocess as subprocess_mod
 
         monkeypatch.setattr(subprocess_compat, "windows_hide_flags", lambda: 0x08000000)
@@ -964,7 +964,7 @@ class TestAgentBrowserRunnable:
 
 
 class TestGetHermesDir:
-    """Tests for ``get_hermes_dir(new_subpath, old_name)``.
+    """Tests for ``get_papylonation_dir(new_subpath, old_name)``.
 
     Contract: prefer the legacy ``<old_name>/`` location, but only when
     it has content. An empty legacy stub must fall through to the new
@@ -977,7 +977,7 @@ class TestGetHermesDir:
 
     def test_neither_exists_returns_new(self, tmp_path, monkeypatch):
         self._set_home(tmp_path, monkeypatch)
-        result = get_hermes_dir("platforms/pairing", "pairing")
+        result = get_papylonation_dir("platforms/pairing", "pairing")
         assert result == tmp_path / "platforms/pairing"
 
     def test_legacy_populated_returns_legacy(self, tmp_path, monkeypatch):
@@ -985,7 +985,7 @@ class TestGetHermesDir:
         legacy = tmp_path / "image_cache"
         legacy.mkdir()
         (legacy / "cached.png").write_bytes(b"x")
-        result = get_hermes_dir("cache/images", "image_cache")
+        result = get_papylonation_dir("cache/images", "image_cache")
         assert result == legacy
 
     def test_legacy_populated_with_subdir_returns_legacy(self, tmp_path, monkeypatch):
@@ -994,7 +994,7 @@ class TestGetHermesDir:
         legacy = tmp_path / "matrix" / "store"
         legacy.mkdir(parents=True)
         (legacy / "session").mkdir()  # subdir, not a file
-        result = get_hermes_dir("platforms/matrix/store", "matrix/store")
+        result = get_papylonation_dir("platforms/matrix/store", "matrix/store")
         assert result == legacy
 
     def test_legacy_empty_returns_new(self, tmp_path, monkeypatch):
@@ -1012,7 +1012,7 @@ class TestGetHermesDir:
         new = tmp_path / "platforms" / "pairing"
         new.mkdir(parents=True)
         (new / "telegram-approved.json").write_text("[]")
-        result = get_hermes_dir("platforms/pairing", "pairing")
+        result = get_papylonation_dir("platforms/pairing", "pairing")
         assert result == new
 
     def test_legacy_empty_and_new_missing_returns_new(self, tmp_path, monkeypatch):
@@ -1026,7 +1026,7 @@ class TestGetHermesDir:
         self._set_home(tmp_path, monkeypatch)
         legacy = tmp_path / "audio_cache"
         legacy.mkdir()
-        result = get_hermes_dir("cache/audio", "audio_cache")
+        result = get_papylonation_dir("cache/audio", "audio_cache")
         assert result == tmp_path / "cache/audio"
 
     def test_legacy_is_file_treated_as_content(self, tmp_path, monkeypatch):
@@ -1038,7 +1038,7 @@ class TestGetHermesDir:
         self._set_home(tmp_path, monkeypatch)
         legacy = tmp_path / "image_cache"
         legacy.write_bytes(b"sentinel")
-        result = get_hermes_dir("cache/images", "image_cache")
+        result = get_papylonation_dir("cache/images", "image_cache")
         assert result == legacy
 
     def test_unreadable_legacy_dir_kept(self, tmp_path, monkeypatch):
@@ -1062,7 +1062,7 @@ class TestGetHermesDir:
             return real_iterdir(self)
 
         monkeypatch.setattr(Path, "iterdir", boom)
-        result = get_hermes_dir(
+        result = get_papylonation_dir(
             "platforms/whatsapp/session", "whatsapp/session"
         )
         assert result == legacy
@@ -1094,7 +1094,7 @@ class TestGetHermesDir:
             return real_lstat(self)
 
         monkeypatch.setattr(Path, "lstat", boom)
-        result = get_hermes_dir("platforms/pairing", "pairing")
+        result = get_papylonation_dir("platforms/pairing", "pairing")
         assert result == legacy
 
     def test_dangling_legacy_symlink_returns_new(self, tmp_path, monkeypatch):
@@ -1112,7 +1112,7 @@ class TestGetHermesDir:
         new = tmp_path / "platforms" / "pairing"
         new.mkdir(parents=True)
         (new / "discord-approved.json").write_text("[]")
-        result = get_hermes_dir("platforms/pairing", "pairing")
+        result = get_papylonation_dir("platforms/pairing", "pairing")
         assert result == new
 
     def test_symlink_to_populated_dir_returns_legacy(self, tmp_path, monkeypatch):
@@ -1123,7 +1123,7 @@ class TestGetHermesDir:
         (real / "cached.png").write_bytes(b"x")
         legacy = tmp_path / "image_cache"
         legacy.symlink_to(real)
-        result = get_hermes_dir("cache/images", "image_cache")
+        result = get_papylonation_dir("cache/images", "image_cache")
         assert result == legacy
 
     def test_symlink_to_empty_dir_returns_new(self, tmp_path, monkeypatch):
@@ -1133,7 +1133,7 @@ class TestGetHermesDir:
         empty.mkdir()
         legacy = tmp_path / "audio_cache"
         legacy.symlink_to(empty)
-        result = get_hermes_dir("cache/audio", "audio_cache")
+        result = get_papylonation_dir("cache/audio", "audio_cache")
         assert result == tmp_path / "cache/audio"
 
 
@@ -1141,32 +1141,32 @@ class TestWslPathTranslation:
     """Cross-boundary path translation for a Windows-host UI + WSL backend."""
 
     def test_windows_drive_to_wsl_mount(self):
-        assert hermes_constants.windows_path_to_wsl(r"C:\Users\alex") == "/mnt/c/Users/alex"
-        assert hermes_constants.windows_path_to_wsl("C:/Users/alex") == "/mnt/c/Users/alex"
-        assert hermes_constants.windows_path_to_wsl("D:\\") == "/mnt/d/"
+        assert papylonation_constants.windows_path_to_wsl(r"C:\Users\alex") == "/mnt/c/Users/alex"
+        assert papylonation_constants.windows_path_to_wsl("C:/Users/alex") == "/mnt/c/Users/alex"
+        assert papylonation_constants.windows_path_to_wsl("D:\\") == "/mnt/d/"
 
     def test_windows_drive_ignores_non_drive_paths(self):
-        assert hermes_constants.windows_path_to_wsl("/home/alex") is None
-        assert hermes_constants.windows_path_to_wsl("relative\\dir") is None
+        assert papylonation_constants.windows_path_to_wsl("/home/alex") is None
+        assert papylonation_constants.windows_path_to_wsl("relative\\dir") is None
 
     def test_wsl_unc_to_posix_both_spellings(self):
-        assert hermes_constants.wsl_unc_path_to_posix(r"\\wsl.localhost\Ubuntu\home\alex") == "/home/alex"
-        assert hermes_constants.wsl_unc_path_to_posix(r"\\wsl$\Ubuntu\home\alex") == "/home/alex"
+        assert papylonation_constants.wsl_unc_path_to_posix(r"\\wsl.localhost\Ubuntu\home\alex") == "/home/alex"
+        assert papylonation_constants.wsl_unc_path_to_posix(r"\\wsl$\Ubuntu\home\alex") == "/home/alex"
         # Forward-slash spelling and distro root.
-        assert hermes_constants.wsl_unc_path_to_posix("//wsl.localhost/Debian/srv/app") == "/srv/app"
-        assert hermes_constants.wsl_unc_path_to_posix("\\\\wsl.localhost\\Ubuntu\\") == "/"
+        assert papylonation_constants.wsl_unc_path_to_posix("//wsl.localhost/Debian/srv/app") == "/srv/app"
+        assert papylonation_constants.wsl_unc_path_to_posix("\\\\wsl.localhost\\Ubuntu\\") == "/"
 
     def test_wsl_unc_ignores_non_unc_paths(self):
-        assert hermes_constants.wsl_unc_path_to_posix(r"C:\Users\alex") is None
-        assert hermes_constants.wsl_unc_path_to_posix("/home/alex") is None
+        assert papylonation_constants.wsl_unc_path_to_posix(r"C:\Users\alex") is None
+        assert papylonation_constants.wsl_unc_path_to_posix("/home/alex") is None
 
     def test_translate_is_noop_off_wsl(self, monkeypatch):
-        monkeypatch.setattr(hermes_constants, "is_wsl", lambda: False)
-        assert hermes_constants.translate_cwd_for_wsl_backend(r"C:\Users\alex") == r"C:\Users\alex"
+        monkeypatch.setattr(papylonation_constants, "is_wsl", lambda: False)
+        assert papylonation_constants.translate_cwd_for_wsl_backend(r"C:\Users\alex") == r"C:\Users\alex"
 
     def test_translate_maps_windows_and_unc_on_wsl(self, monkeypatch):
-        monkeypatch.setattr(hermes_constants, "is_wsl", lambda: True)
-        assert hermes_constants.translate_cwd_for_wsl_backend(r"C:\Users\alex") == "/mnt/c/Users/alex"
-        assert hermes_constants.translate_cwd_for_wsl_backend(r"\\wsl.localhost\Ubuntu\home\alex") == "/home/alex"
+        monkeypatch.setattr(papylonation_constants, "is_wsl", lambda: True)
+        assert papylonation_constants.translate_cwd_for_wsl_backend(r"C:\Users\alex") == "/mnt/c/Users/alex"
+        assert papylonation_constants.translate_cwd_for_wsl_backend(r"\\wsl.localhost\Ubuntu\home\alex") == "/home/alex"
         # Already-POSIX paths pass through untouched.
-        assert hermes_constants.translate_cwd_for_wsl_backend("/home/alex") == "/home/alex"
+        assert papylonation_constants.translate_cwd_for_wsl_backend("/home/alex") == "/home/alex"

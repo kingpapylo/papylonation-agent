@@ -42,7 +42,7 @@ def _clean_env(monkeypatch):
 class TestIgnoreUserConfigEnvGate:
     """``load_cli_config()`` must honour ``HERMES_IGNORE_USER_CONFIG=1``.
 
-    When the env var is set, user config at ``<hermes_home>/config.yaml`` is
+    When the env var is set, user config at ``<papylonation_home>/config.yaml`` is
     skipped even if present — the function returns only the built-in defaults
     (merged with the project-level ``cli-config.yaml`` fallback).
     """
@@ -66,9 +66,9 @@ class TestIgnoreUserConfigEnvGate:
         (tmp_path / "config.yaml").write_text(config_yaml)
 
     def _reload_cli(self, monkeypatch, tmp_path):
-        """Point cli._hermes_home at tmp_path and return a fresh load_cli_config."""
+        """Point cli._papylonation_home at tmp_path and return a fresh load_cli_config."""
         import cli
-        monkeypatch.setattr(cli, "_hermes_home", tmp_path)
+        monkeypatch.setattr(cli, "_papylonation_home", tmp_path)
         return cli.load_cli_config
 
     def test_user_config_loaded_when_flag_unset(self, tmp_path, monkeypatch):
@@ -157,7 +157,7 @@ class TestIgnoreRulesEnvGate:
 
 
 class TestCmdChatWiring:
-    """The wiring inside ``cmd_chat()`` in ``hermes_cli/main.py`` must set
+    """The wiring inside ``cmd_chat()`` in ``papylonation_cli/main.py`` must set
     both env vars before importing ``cli`` (which evaluates
     ``load_cli_config()`` at module import).
     """
@@ -231,7 +231,7 @@ class TestArgparseFlagsRegistered:
 
     def test_main_py_registers_both_flags(self):
         """E2E: the real hermes parser accepts both flags."""
-        from hermes_cli._parser import build_top_level_parser
+        from papylonation_cli._parser import build_top_level_parser
 
         parser, _subparsers, chat_parser = build_top_level_parser()
 
@@ -244,7 +244,7 @@ class TestArgparseFlagsRegistered:
 
         # And the cmd_chat env-var wiring must be present
         import inspect
-        import hermes_cli.main as hm
+        import papylonation_cli.main as hm
         src = inspect.getsource(hm)
         assert "HERMES_IGNORE_USER_CONFIG" in src
         assert "HERMES_IGNORE_RULES" in src

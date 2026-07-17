@@ -7,28 +7,28 @@ from pathlib import Path
 from typing import Optional
 
 
-def _hermes_home_path() -> Path:
+def _papylonation_home_path() -> Path:
     """Resolve the active HERMES_HOME (profile-aware) without circular imports."""
     try:
-        from hermes_constants import get_hermes_home  # local import to avoid cycles
-        return get_hermes_home()
+        from papylonation_constants import get_papylonation_home  # local import to avoid cycles
+        return get_papylonation_home()
     except Exception:
         return Path(os.path.expanduser("~/.hermes"))
 
 
-def _hermes_root_path() -> Path:
+def _papylonation_root_path() -> Path:
     """Resolve the Hermes root dir (always the parent of any profile, never per-profile)."""
     try:
-        from hermes_constants import get_default_hermes_root  # local import to avoid cycles
-        return get_default_hermes_root()
+        from papylonation_constants import get_default_papylonation_root  # local import to avoid cycles
+        return get_default_papylonation_root()
     except Exception:
         return Path(os.path.expanduser("~/.hermes"))
 
 
 def build_write_denied_paths(home: str) -> set[str]:
     """Return exact sensitive paths that must never be written."""
-    hermes_home = _hermes_home_path()
-    hermes_root = _hermes_root_path()
+    papylonation_home = _papylonation_home_path()
+    papylonation_root = _papylonation_root_path()
     return {
         os.path.realpath(p)
         for p in [
@@ -37,15 +37,15 @@ def build_write_denied_paths(home: str) -> set[str]:
             os.path.join(home, ".ssh", "id_ed25519"),
             os.path.join(home, ".ssh", "config"),
             # Active profile .env (or top-level .env when not in profile mode).
-            str(hermes_home / ".env"),
+            str(papylonation_home / ".env"),
             # Top-level .env, even when running under a profile — overwriting it
             # leaks credentials across every profile that inherits from root (#15981).
-            str(hermes_root / ".env"),
+            str(papylonation_root / ".env"),
             # Active profile Anthropic PKCE credential store.
-            str(hermes_home / ".anthropic_oauth.json"),
+            str(papylonation_home / ".anthropic_oauth.json"),
             # Top-level Anthropic PKCE credential store remains sensitive even
             # when a profile is active; default/non-profile sessions still read it.
-            str(hermes_root / ".anthropic_oauth.json"),
+            str(papylonation_root / ".anthropic_oauth.json"),
             os.path.join(home, ".netrc"),
             os.path.join(home, ".pgpass"),
             os.path.join(home, ".npmrc"),
@@ -108,16 +108,16 @@ def _classify_write_denial(path: str) -> Optional[str]:
 
     mcp_tokens_dir_name = "mcp-tokens"
 
-    hermes_dirs = []
-    for base in (_hermes_home_path(), _hermes_root_path()):
+    papylonation_dirs = []
+    for base in (_papylonation_home_path(), _papylonation_root_path()):
         try:
             real = os.path.realpath(base)
-            if real not in hermes_dirs:
-                hermes_dirs.append(real)
+            if real not in papylonation_dirs:
+                papylonation_dirs.append(real)
         except Exception:
             continue
 
-    for base_real in hermes_dirs:
+    for base_real in papylonation_dirs:
         # Session transcripts are application-owned state.  Letting the agent's
         # generic file tools rewrite state.db or legacy JSON snapshots can
         # falsify conversation history and invalidate resume/compression state.
@@ -240,17 +240,17 @@ def get_read_block_error(path: str) -> Optional[str]:
     # blocked when running under a profile (HERMES_HOME points at
     # <root>/profiles/<name> in profile mode). Same shape as the write
     # deny widening (#15981, #14157).
-    hermes_dirs: list[Path] = []
-    for base in (_hermes_home_path(), _hermes_root_path()):
+    papylonation_dirs: list[Path] = []
+    for base in (_papylonation_home_path(), _papylonation_root_path()):
         try:
             real = base.resolve()
-            if real not in hermes_dirs:
-                hermes_dirs.append(real)
+            if real not in papylonation_dirs:
+                papylonation_dirs.append(real)
         except Exception:
             continue
 
     # Skills .hub: prompt-injection carriers.
-    for hd in hermes_dirs:
+    for hd in papylonation_dirs:
         blocked_dirs = [
             hd / "skills" / ".hub" / "index-cache",
             hd / "skills" / ".hub",
@@ -280,7 +280,7 @@ def get_read_block_error(path: str) -> Optional[str]:
         # was introduced by #31968 but not added to this guard.
         os.path.join("cache", "bws_cache.json"),
     )
-    for hd in hermes_dirs:
+    for hd in papylonation_dirs:
         for name in credential_file_names:
             try:
                 blocked = (hd / name).resolve()
@@ -297,7 +297,7 @@ def get_read_block_error(path: str) -> Optional[str]:
 
     # mcp-tokens/: directory prefix match — anything inside is OAuth
     # token material.
-    for hd in hermes_dirs:
+    for hd in papylonation_dirs:
         try:
             mcp_tokens = (hd / "mcp-tokens").resolve()
         except Exception:
@@ -396,8 +396,8 @@ def _resolve_active_profile_name() -> str:
     never raises into the tool path.
     """
     try:
-        home_real = _hermes_home_path().resolve()
-        root_real = _hermes_root_path().resolve()
+        home_real = _papylonation_home_path().resolve()
+        root_real = _papylonation_root_path().resolve()
     except (OSError, RuntimeError):
         return "default"
     profiles_dir = root_real / "profiles"
@@ -430,7 +430,7 @@ def classify_cross_profile_target(path: str) -> Optional[dict]:
     """
     try:
         target = Path(os.path.expanduser(str(path))).resolve()
-        root_real = _hermes_root_path().resolve()
+        root_real = _papylonation_root_path().resolve()
     except (OSError, RuntimeError):
         return None
 

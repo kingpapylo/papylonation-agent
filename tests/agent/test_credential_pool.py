@@ -11,9 +11,9 @@ import pytest
 
 
 def _write_auth_store(tmp_path, payload: dict) -> None:
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir(parents=True, exist_ok=True)
-    (hermes_home / "auth.json").write_text(json.dumps(payload, indent=2))
+    papylonation_home = tmp_path / "hermes"
+    papylonation_home.mkdir(parents=True, exist_ok=True)
+    (papylonation_home / "auth.json").write_text(json.dumps(payload, indent=2))
 
 
 def _jwt_with_claims(claims: dict) -> str:
@@ -300,7 +300,7 @@ def test_explicit_reset_timestamp_overrides_default_429_ttl(tmp_path, monkeypatc
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     # Prevent auto-seeding from Codex CLI tokens on the host
     monkeypatch.setattr(
-        "hermes_cli.auth._import_codex_cli_tokens",
+        "papylonation_cli.auth._import_codex_cli_tokens",
         lambda: None,
     )
     _write_auth_store(
@@ -902,7 +902,7 @@ def test_load_pool_persists_bitwarden_origin_metadata_without_secret(tmp_path, m
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     monkeypatch.setenv("OPENROUTER_API_KEY", sentinel)
     monkeypatch.setattr(
-        "hermes_cli.env_loader.get_secret_source",
+        "papylonation_cli.env_loader.get_secret_source",
         lambda env_var: "bitwarden" if env_var == "OPENROUTER_API_KEY" else None,
     )
     _write_auth_store(tmp_path, {"version": 1, "providers": {}})
@@ -1093,7 +1093,7 @@ def test_write_credential_pool_sanitizes_borrowed_payload_at_disk_boundary(tmp_p
     manual_secret = "MANUAL_SECRET_STAYS_PERSISTABLE"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
 
-    from hermes_cli.auth import write_credential_pool
+    from papylonation_cli.auth import write_credential_pool
 
     write_credential_pool("openrouter", [
         {
@@ -1136,7 +1136,7 @@ def test_write_credential_pool_treats_unowned_oauth_source_as_borrowed(tmp_path,
     sentinel = "S3NTINEL_DO_NOT_PERSIST_UNOWNED_OAUTH"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
 
-    from hermes_cli.auth import write_credential_pool
+    from papylonation_cli.auth import write_credential_pool
 
     write_credential_pool("openrouter", [
         {
@@ -1164,7 +1164,7 @@ def test_write_credential_pool_preserves_known_provider_owned_oauth_state(tmp_pa
     sentinel = "PROVIDER_OWNED_DEVICE_CODE_STAYS_PERSISTABLE"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
 
-    from hermes_cli.auth import write_credential_pool
+    from papylonation_cli.auth import write_credential_pool
 
     write_credential_pool("nous", [
         {
@@ -1193,15 +1193,15 @@ def test_load_pool_prefers_dotenv_over_stale_os_environ(tmp_path, monkeypatch):
     os.environ and silently wrote the stale value into auth.json, causing
     persistent 401 errors after key rotation.
     """
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    papylonation_home = tmp_path / "hermes"
+    papylonation_home.mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
 
     # Simulate the bug: parent shell exported a stale test key
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-STALE-from-shell")
 
     # User edited ~/.hermes/.env with the fresh key
-    (hermes_home / ".env").write_text(
+    (papylonation_home / ".env").write_text(
         "OPENROUTER_API_KEY=sk-or-FRESH-from-dotenv\n"
     )
 
@@ -1225,13 +1225,13 @@ def test_load_pool_falls_back_to_os_environ_when_dotenv_empty(tmp_path, monkeypa
     os.environ. Guards against regressions that would break production
     deployments relying on runtime-injected env vars.
     """
-    hermes_home = tmp_path / "hermes"
-    hermes_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    papylonation_home = tmp_path / "hermes"
+    papylonation_home.mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-from-runtime-env")
 
     # .env exists but does not define OPENROUTER_API_KEY
-    (hermes_home / ".env").write_text("SOME_OTHER_VAR=unrelated\n")
+    (papylonation_home / ".env").write_text("SOME_OTHER_VAR=unrelated\n")
 
     _write_auth_store(tmp_path, {"version": 1, "providers": {}})
 
@@ -1453,8 +1453,8 @@ def test_nous_pool_terminal_refresh_removes_device_code_entry(tmp_path, monkeypa
     )
 
     from agent.credential_pool import PooledCredential, load_pool
-    from hermes_cli import auth as auth_mod
-    from hermes_cli.auth import AuthError
+    from papylonation_cli import auth as auth_mod
+    from papylonation_cli.auth import AuthError
 
     refresh_calls = {"count": 0}
 
@@ -1582,7 +1582,7 @@ def test_load_pool_removes_stale_file_backed_singleton_entry(tmp_path, monkeypat
     )
 
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: None,
     )
     monkeypatch.setattr(
@@ -1651,7 +1651,7 @@ def test_singleton_seed_does_not_clobber_manual_oauth_entry(tmp_path, monkeypatc
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
-    monkeypatch.setattr("hermes_cli.auth.is_provider_explicitly_configured", lambda pid: True)
+    monkeypatch.setattr("papylonation_cli.auth.is_provider_explicitly_configured", lambda pid: True)
     _write_auth_store(
         tmp_path,
         {
@@ -1663,7 +1663,7 @@ def test_singleton_seed_does_not_clobber_manual_oauth_entry(tmp_path, monkeypatc
                         "label": "manual-pkce",
                         "auth_type": "oauth",
                         "priority": 0,
-                        "source": "manual:hermes_pkce",
+                        "source": "manual:papylonation_pkce",
                         "access_token": "manual-token",
                         "refresh_token": "manual-refresh",
                         "expires_at_ms": 1711234567000,
@@ -1674,7 +1674,7 @@ def test_singleton_seed_does_not_clobber_manual_oauth_entry(tmp_path, monkeypatc
     )
 
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: {
             "accessToken": "seeded-token",
             "refreshToken": "seeded-refresh",
@@ -1692,7 +1692,7 @@ def test_singleton_seed_does_not_clobber_manual_oauth_entry(tmp_path, monkeypatc
     entries = pool.entries()
 
     assert len(entries) == 2
-    assert {entry.source for entry in entries} == {"manual:hermes_pkce", "hermes_pkce"}
+    assert {entry.source for entry in entries} == {"manual:papylonation_pkce", "papylonation_pkce"}
 
 
 def test_load_pool_prefers_anthropic_env_token_over_file_backed_oauth(tmp_path, monkeypatch):
@@ -1703,7 +1703,7 @@ def test_load_pool_prefers_anthropic_env_token_over_file_backed_oauth(tmp_path, 
     _write_auth_store(tmp_path, {"version": 1, "providers": {}})
 
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: {
             "accessToken": "file-backed-token",
             "refreshToken": "refresh-token",
@@ -1743,7 +1743,7 @@ def test_load_pool_api_key_path_skips_oauth_autodiscovery(tmp_path, monkeypatch)
     monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
     _write_auth_store(tmp_path, {"version": 1, "providers": {}})
-    monkeypatch.setattr("hermes_cli.auth.is_provider_explicitly_configured", lambda pid: True)
+    monkeypatch.setattr("papylonation_cli.auth.is_provider_explicitly_configured", lambda pid: True)
 
     pkce_called = {"n": 0}
     cc_called = {"n": 0}
@@ -1764,7 +1764,7 @@ def test_load_pool_api_key_path_skips_oauth_autodiscovery(tmp_path, monkeypatch)
             "expiresAt": int(time.time() * 1000) + 3_600_000,
         }
 
-    monkeypatch.setattr("agent.anthropic_adapter.read_hermes_oauth_credentials", _fake_pkce)
+    monkeypatch.setattr("agent.anthropic_adapter.read_papylonation_oauth_credentials", _fake_pkce)
     monkeypatch.setattr("agent.anthropic_adapter.read_claude_code_credentials", _fake_cc)
 
     from agent.credential_pool import load_pool
@@ -1783,7 +1783,7 @@ def test_load_pool_api_key_path_prunes_stale_oauth_entries(tmp_path, monkeypatch
     """Switching OAuth -> API key must prune stale OAuth entries from auth.json.
 
     Without this, a user who logs into OAuth (seeding `claude_code` or
-    `hermes_pkce` into auth.json) and later switches to the API key at
+    `papylonation_pkce` into auth.json) and later switches to the API key at
     `hermes setup` would still have those OAuth entries dormant on disk.
     Pool rotation on a transient 401 could revive them and flip the
     session onto the OAuth masquerade.
@@ -1817,8 +1817,8 @@ def test_load_pool_api_key_path_prunes_stale_oauth_entries(tmp_path, monkeypatch
             },
         },
     )
-    monkeypatch.setattr("hermes_cli.auth.is_provider_explicitly_configured", lambda pid: True)
-    monkeypatch.setattr("agent.anthropic_adapter.read_hermes_oauth_credentials", lambda: None)
+    monkeypatch.setattr("papylonation_cli.auth.is_provider_explicitly_configured", lambda pid: True)
+    monkeypatch.setattr("agent.anthropic_adapter.read_papylonation_oauth_credentials", lambda: None)
     monkeypatch.setattr("agent.anthropic_adapter.read_claude_code_credentials", lambda: None)
 
     from agent.credential_pool import load_pool
@@ -1844,10 +1844,10 @@ def test_load_pool_oauth_path_still_autodiscovers(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_TOKEN", "sk-ant-oat01-explicit-oauth-token")
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
     _write_auth_store(tmp_path, {"version": 1, "providers": {}})
-    monkeypatch.setattr("hermes_cli.auth.is_provider_explicitly_configured", lambda pid: True)
+    monkeypatch.setattr("papylonation_cli.auth.is_provider_explicitly_configured", lambda pid: True)
 
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: None,
     )
     monkeypatch.setattr(
@@ -2322,12 +2322,12 @@ def test_load_pool_does_not_seed_claude_code_when_anthropic_not_configured(tmp_p
         lambda: {"accessToken": "sk-ant...oken", "refreshToken": "rt", "expiresAt": 9999999999999},
     )
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: None,
     )
     # User configured kimi-coding, NOT anthropic
     monkeypatch.setattr(
-        "hermes_cli.auth.is_provider_explicitly_configured",
+        "papylonation_cli.auth.is_provider_explicitly_configured",
         lambda pid: pid == "kimi-coding",
     )
 
@@ -2344,7 +2344,7 @@ def test_load_pool_seeds_copilot_via_gh_auth_token(tmp_path, monkeypatch):
     _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
 
     monkeypatch.setattr(
-        "hermes_cli.copilot_auth.resolve_copilot_token",
+        "papylonation_cli.copilot_auth.resolve_copilot_token",
         lambda: ("gho_fake_token_abc123", "gh auth token"),
     )
 
@@ -2365,7 +2365,7 @@ def test_load_pool_does_not_seed_copilot_when_no_token(tmp_path, monkeypatch):
     _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
 
     monkeypatch.setattr(
-        "hermes_cli.copilot_auth.resolve_copilot_token",
+        "papylonation_cli.copilot_auth.resolve_copilot_token",
         lambda: ("", ""),
     )
 
@@ -2382,7 +2382,7 @@ def test_load_pool_seeds_qwen_oauth_via_cli_tokens(tmp_path, monkeypatch):
     _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_qwen_runtime_credentials",
+        "papylonation_cli.auth.resolve_qwen_runtime_credentials",
         lambda **kw: {
             "provider": "qwen-oauth",
             "base_url": "https://portal.qwen.ai/v1",
@@ -2408,10 +2408,10 @@ def test_load_pool_does_not_seed_qwen_oauth_when_no_token(tmp_path, monkeypatch)
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
 
-    from hermes_cli.auth import AuthError
+    from papylonation_cli.auth import AuthError
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_qwen_runtime_credentials",
+        "papylonation_cli.auth.resolve_qwen_runtime_credentials",
         lambda **kw: (_ for _ in ()).throw(
             AuthError("Qwen CLI credentials not found.", provider="qwen-oauth", code="qwen_auth_missing")
         ),
@@ -2855,7 +2855,7 @@ def _xai_auth_store(access_token: str, refresh_token: str) -> dict:
 
 
 def test_is_terminal_xai_oauth_refresh_error():
-    from hermes_cli.auth import AuthError, _is_terminal_xai_oauth_refresh_error
+    from papylonation_cli.auth import AuthError, _is_terminal_xai_oauth_refresh_error
 
     assert _is_terminal_xai_oauth_refresh_error(
         AuthError("Refresh failed", provider="xai-oauth", code="xai_refresh_failed", relogin_required=True)
@@ -2885,8 +2885,8 @@ def test_xai_oauth_terminal_refresh_clears_auth_json_and_removes_pool_entries(
     _write_auth_store(tmp_path, _xai_auth_store("old-access-token", "old-refresh-token"))
 
     from agent.credential_pool import PooledCredential, load_pool
-    import hermes_cli.auth as auth_mod
-    from hermes_cli.auth import AuthError
+    import papylonation_cli.auth as auth_mod
+    from papylonation_cli.auth import AuthError
 
     pool = load_pool("xai-oauth")
     selected = pool.select()
@@ -2945,8 +2945,8 @@ def test_xai_oauth_nonterminal_refresh_does_not_quarantine(tmp_path, monkeypatch
     _write_auth_store(tmp_path, _xai_auth_store("old-access-token", "old-refresh-token"))
 
     from agent.credential_pool import load_pool
-    import hermes_cli.auth as auth_mod
-    from hermes_cli.auth import AuthError
+    import papylonation_cli.auth as auth_mod
+    from papylonation_cli.auth import AuthError
 
     pool = load_pool("xai-oauth")
     assert pool.select() is not None
@@ -2998,7 +2998,7 @@ def test_xai_oauth_concurrent_pool_instances_refresh_single_use_token_once(
     })
 
     from agent.credential_pool import load_pool
-    import hermes_cli.auth as auth_mod
+    import papylonation_cli.auth as auth_mod
 
     pools = [load_pool("xai-oauth"), load_pool("xai-oauth")]
     start = threading.Barrier(2)
@@ -3063,7 +3063,7 @@ def _codex_auth_store(access_token: str, refresh_token: str) -> dict:
 
 
 def test_is_terminal_codex_oauth_refresh_error():
-    from hermes_cli.auth import AuthError, _is_terminal_codex_oauth_refresh_error
+    from papylonation_cli.auth import AuthError, _is_terminal_codex_oauth_refresh_error
 
     assert _is_terminal_codex_oauth_refresh_error(
         AuthError("Refresh failed", provider="openai-codex", code="codex_refresh_failed", relogin_required=True)
@@ -3099,8 +3099,8 @@ def test_codex_oauth_terminal_refresh_clears_auth_json_and_removes_pool_entries(
     _write_auth_store(tmp_path, _codex_auth_store("old-access-token", "old-refresh-token"))
 
     from agent.credential_pool import PooledCredential, load_pool
-    import hermes_cli.auth as auth_mod
-    from hermes_cli.auth import AuthError
+    import papylonation_cli.auth as auth_mod
+    from papylonation_cli.auth import AuthError
 
     pool = load_pool("openai-codex")
     selected = pool.select()
@@ -3158,8 +3158,8 @@ def test_codex_oauth_nonterminal_refresh_does_not_quarantine(tmp_path, monkeypat
     _write_auth_store(tmp_path, _codex_auth_store("old-access-token", "old-refresh-token"))
 
     from agent.credential_pool import load_pool
-    import hermes_cli.auth as auth_mod
-    from hermes_cli.auth import AuthError
+    import papylonation_cli.auth as auth_mod
+    from papylonation_cli.auth import AuthError
 
     pool = load_pool("openai-codex")
     assert pool.select() is not None
@@ -3189,7 +3189,7 @@ def test_persist_preserves_concurrent_disk_only_entry(tmp_path, monkeypatch):
     # Block external-credential autodiscovery: a real ~/.claude/.credentials.json
     # on a dev machine would seed an extra claude_code entry and break the
     # exact-id assertions below (passes on CI where no such file exists).
-    monkeypatch.setattr("agent.anthropic_adapter.read_hermes_oauth_credentials", lambda: None)
+    monkeypatch.setattr("agent.anthropic_adapter.read_papylonation_oauth_credentials", lambda: None)
     monkeypatch.setattr("agent.anthropic_adapter.read_claude_code_credentials", lambda: None)
     _write_auth_store(
         tmp_path,
@@ -3219,7 +3219,7 @@ def test_persist_preserves_concurrent_disk_only_entry(tmp_path, monkeypatch):
     )
 
     from agent.credential_pool import load_pool
-    from hermes_cli.auth import read_credential_pool, write_credential_pool
+    from papylonation_cli.auth import read_credential_pool, write_credential_pool
 
     pool = load_pool("anthropic")
     assert {entry.id for entry in pool.entries()} == {"cred-A", "cred-B"}
@@ -3253,7 +3253,7 @@ def test_persist_preserves_concurrent_disk_only_entry(tmp_path, monkeypatch):
 def test_remove_index_does_not_resurrect_via_disk_merge(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     # Block external-credential autodiscovery (see note in the test above).
-    monkeypatch.setattr("agent.anthropic_adapter.read_hermes_oauth_credentials", lambda: None)
+    monkeypatch.setattr("agent.anthropic_adapter.read_papylonation_oauth_credentials", lambda: None)
     monkeypatch.setattr("agent.anthropic_adapter.read_claude_code_credentials", lambda: None)
     _write_auth_store(
         tmp_path,
@@ -3303,9 +3303,9 @@ def _make_anthropic_claude_code_pool(tmp_path, monkeypatch, *, access_token, ref
     monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
     _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
-    monkeypatch.setattr("hermes_cli.auth.is_provider_explicitly_configured", lambda pid: pid == "anthropic")
+    monkeypatch.setattr("papylonation_cli.auth.is_provider_explicitly_configured", lambda pid: pid == "anthropic")
     monkeypatch.setattr(
-        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        "agent.anthropic_adapter.read_papylonation_oauth_credentials",
         lambda: None,
     )
     monkeypatch.setattr(

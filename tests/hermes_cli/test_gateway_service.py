@@ -10,7 +10,7 @@ import pytest
 pwd = pytest.importorskip("pwd")
 grp = pytest.importorskip("grp")
 
-import hermes_cli.gateway as gateway_cli
+import papylonation_cli.gateway as gateway_cli
 from gateway import status
 from gateway.restart import (
     DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT,
@@ -254,7 +254,7 @@ class TestSystemdServiceRefresh:
         ``Environment=`` line. Without this guard, any test that drives
         ``run_gateway()`` end-to-end on a real Linux dev box silently
         rewrites the developer's installed gateway unit with a
-        ``/tmp/pytest-of-.../hermes_test`` HERMES_HOME — silently breaking
+        ``/tmp/pytest-of-.../papylonation_test`` HERMES_HOME — silently breaking
         their gateway on the next boot. The guard sniffs the generated
         unit body for tmpdir markers and refuses the write. Tests that
         legitimately exercise the refresh flow patch
@@ -271,7 +271,7 @@ class TestSystemdServiceRefresh:
         polluted_unit = (
             "[Service]\n"
             'Environment="HERMES_HOME=/tmp/pytest-of-alice/pytest-42/'
-            'popen-gw0/test_x/hermes_test"\n'
+            'popen-gw0/test_x/papylonation_test"\n'
         )
         monkeypatch.setattr(
             gateway_cli,
@@ -387,8 +387,8 @@ class TestTempHomeServiceDefinitionGuard:
         )
         assert gateway_cli._temp_home_in_service_definition(plist) is None
 
-    def test_accepts_unit_without_hermes_home(self):
-        unit = "[Service]\nExecStart=/usr/bin/python -m hermes_cli.main gateway run\n"
+    def test_accepts_unit_without_papylonation_home(self):
+        unit = "[Service]\nExecStart=/usr/bin/python -m papylonation_cli.main gateway run\n"
         assert gateway_cli._temp_home_in_service_definition(unit) is None
 
     def test_tmp_prefixed_non_temp_path_is_accepted(self):
@@ -528,7 +528,7 @@ class TestGeneratedSystemdUnits:
             "_system_service_identity",
             lambda run_as_user=None: ("alice", "alice", "/home/alice"),
         )
-        monkeypatch.setattr(gateway_cli, "_hermes_home_for_target_user", lambda home: "/home/alice/.hermes")
+        monkeypatch.setattr(gateway_cli, "_papylonation_home_for_target_user", lambda home: "/home/alice/.hermes")
         monkeypatch.setenv("PATH", "/usr/local/bin:/mnt/c/WINDOWS/system32")
         monkeypatch.setattr(gateway_cli.shutil, "which", lambda cmd: None)
 
@@ -1258,7 +1258,7 @@ class TestLaunchdServiceRecovery:
     # ── Unsupport marker lifecycle ───────────────────────────────────────
 
     def test_launchd_unsupported_marker_write_and_clear(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: tmp_path)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: tmp_path)
         assert not gateway_cli._launchd_unsupported_marker_exists()
         gateway_cli._write_launchd_unsupported_marker()
         assert gateway_cli._launchd_unsupported_marker_exists()
@@ -1270,7 +1270,7 @@ class TestLaunchdServiceRecovery:
         plist_path = tmp_path / "ai.hermes.gateway.plist"
         monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: plist_path)
         # Pre-seed the marker as if a previous fallback wrote it
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: tmp_path)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: tmp_path)
         # Bypass the temp-home service write guard (added on main after PR #42567)
         monkeypatch.setattr(gateway_cli, "_refuse_temp_home_service_write", lambda d, k: False)
         gateway_cli._write_launchd_unsupported_marker()
@@ -1330,7 +1330,7 @@ class TestLaunchdServiceRecovery:
         monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
         monkeypatch.setattr("gateway.status.get_running_pid", lambda cleanup_stale=False: 88888)
         # Pre-seed the unsupported marker
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: tmp_path)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: tmp_path)
         gateway_cli._write_launchd_unsupported_marker()
 
         gateway_cli.launchd_status()
@@ -1357,7 +1357,7 @@ class TestLaunchdServiceRecovery:
             return SimpleNamespace(returncode=0, stdout="", stderr="")
         monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
         monkeypatch.setattr("gateway.status.get_running_pid", lambda cleanup_stale=False: None)
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: tmp_path)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: tmp_path)
         gateway_cli._write_launchd_unsupported_marker()
 
         gateway_cli.launchd_status()
@@ -1731,7 +1731,7 @@ class TestGatewaySystemServiceRouting:
         monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
         monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", lambda system=False: unit)
         monkeypatch.setattr(gateway_cli, "has_conflicting_systemd_units", lambda: False)
-        monkeypatch.setattr(gateway_cli, "has_legacy_hermes_units", lambda: False)
+        monkeypatch.setattr(gateway_cli, "has_legacy_papylonation_units", lambda: False)
         monkeypatch.setattr(gateway_cli, "systemd_unit_is_current", lambda system=False: True)
         monkeypatch.setattr(gateway_cli, "_runtime_health_lines", lambda: ["⚠ Last shutdown reason: Gateway restart requested"])
         monkeypatch.setattr(gateway_cli, "get_systemd_linger_status", lambda: (True, ""))
@@ -2015,7 +2015,7 @@ class TestSystemUnitHermesHome:
         assert 'HERMES_HOME=/home/alice/.hermes/profiles/coder' in unit
         assert '/root/' not in unit
 
-    def test_system_unit_preserves_custom_hermes_home(self, monkeypatch):
+    def test_system_unit_preserves_custom_papylonation_home(self, monkeypatch):
         # Custom HERMES_HOME not under any user's home — keep as-is
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.setenv("HERMES_HOME", "/opt/hermes-shared")
@@ -2036,14 +2036,14 @@ class TestSystemUnitHermesHome:
         # User-scope units should still use the calling user's HERMES_HOME
         unit = gateway_cli.generate_systemd_unit(system=False)
 
-        hermes_home = str(gateway_cli.get_hermes_home().resolve())
-        assert f'HERMES_HOME={hermes_home}' in unit
+        papylonation_home = str(gateway_cli.get_papylonation_home().resolve())
+        assert f'HERMES_HOME={papylonation_home}' in unit
 
 
 class TestSystemUnitRefreshSyncsHermesHome:
     """sudo system refresh must not flip TimeoutStopSec via /root/.hermes."""
 
-    def test_refresh_adopts_unit_hermes_home_before_rewriting(self, tmp_path, monkeypatch):
+    def test_refresh_adopts_unit_papylonation_home_before_rewriting(self, tmp_path, monkeypatch):
         root_home = tmp_path / "root"
         alice_home = tmp_path / "alice"
         root_hermes = root_home / ".hermes"
@@ -2109,7 +2109,7 @@ class TestSystemUnitRefreshSyncsHermesHome:
                 order.append("read")
             return real_read_text(self, *a, **k)
 
-        monkeypatch.setattr(gateway_cli, "_sync_hermes_home_from_systemd_unit", tracking_sync)
+        monkeypatch.setattr(gateway_cli, "_sync_papylonation_home_from_systemd_unit", tracking_sync)
         monkeypatch.setattr(Path, "read_text", tracking_read_text)
         # Avoid a real generate/compare — we only assert sync precedes read.
         monkeypatch.setattr(gateway_cli, "generate_systemd_unit", lambda **k: "[Unit]\n")
@@ -2136,7 +2136,7 @@ class TestSystemUnitRefreshSyncsHermesHome:
             )
             monkeypatch.setattr(
                 gateway_cli,
-                "_sync_hermes_home_from_systemd_unit",
+                "_sync_papylonation_home_from_systemd_unit",
                 lambda system: calls.append("sync"),
             )
             monkeypatch.setattr(
@@ -2172,34 +2172,34 @@ class TestSystemUnitRefreshSyncsHermesHome:
 
 
 class TestHermesHomeForTargetUser:
-    """Unit tests for _hermes_home_for_target_user()."""
+    """Unit tests for _papylonation_home_for_target_user()."""
 
     def test_remaps_default_home(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.delenv("HERMES_HOME", raising=False)
 
-        result = gateway_cli._hermes_home_for_target_user("/home/alice")
+        result = gateway_cli._papylonation_home_for_target_user("/home/alice")
         assert result == "/home/alice/.hermes"
 
     def test_remaps_profile_path(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.setenv("HERMES_HOME", "/root/.hermes/profiles/coder")
 
-        result = gateway_cli._hermes_home_for_target_user("/home/alice")
+        result = gateway_cli._papylonation_home_for_target_user("/home/alice")
         assert result == "/home/alice/.hermes/profiles/coder"
 
     def test_keeps_custom_path(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/root")))
         monkeypatch.setenv("HERMES_HOME", "/opt/hermes")
 
-        result = gateway_cli._hermes_home_for_target_user("/home/alice")
+        result = gateway_cli._papylonation_home_for_target_user("/home/alice")
         assert result == "/opt/hermes"
 
     def test_noop_when_same_user(self, monkeypatch):
         monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/home/alice")))
         monkeypatch.delenv("HERMES_HOME", raising=False)
 
-        result = gateway_cli._hermes_home_for_target_user("/home/alice")
+        result = gateway_cli._papylonation_home_for_target_user("/home/alice")
         assert result == "/home/alice/.hermes"
 
 
@@ -2489,13 +2489,13 @@ class TestPreflightUserSystemd:
 class TestProfileArg:
     """Tests for _profile_arg — returns '--profile <name>' for named profiles."""
 
-    def test_default_hermes_home_returns_empty(self, tmp_path, monkeypatch):
+    def test_default_papylonation_home_returns_empty(self, tmp_path, monkeypatch):
         """Default ~/.hermes should not produce a --profile flag."""
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
+        papylonation_home = tmp_path / ".hermes"
+        papylonation_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        result = gateway_cli._profile_arg(str(hermes_home))
+        monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
+        result = gateway_cli._profile_arg(str(papylonation_home))
         assert result == ""
 
     def test_named_profile_returns_flag(self, tmp_path, monkeypatch):
@@ -2550,7 +2550,7 @@ class TestProfileArg:
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile_dir))
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: profile_dir)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: profile_dir)
         unit = gateway_cli.generate_systemd_unit(system=False)
         assert "--profile mybot" in unit
         assert "gateway run" in unit
@@ -2569,7 +2569,7 @@ class TestProfileArg:
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
         monkeypatch.setenv("HERMES_HOME", str(root_profile))
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: root_profile)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: root_profile)
         monkeypatch.setattr(
             gateway_cli,
             "_system_service_identity",
@@ -2588,7 +2588,7 @@ class TestProfileArg:
         profile_dir.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile_dir))
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: profile_dir)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: profile_dir)
         plist = gateway_cli.generate_launchd_plist()
         assert "<string>--profile</string>" in plist
         assert "<string>mybot</string>" in plist
@@ -2611,7 +2611,7 @@ class TestProfileArg:
 
         monkeypatch.setattr(Path, "home", lambda: profile_home)
         monkeypatch.setenv("HERMES_HOME", str(profile_dir))
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: profile_dir)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: profile_dir)
         monkeypatch.setattr(pwd, "getpwuid", lambda uid: SimpleNamespace(pw_dir=str(machine_home)))
 
         plist_path = gateway_cli.get_launchd_plist_path()
@@ -2661,7 +2661,7 @@ class TestSystemUnitPathRemapping:
 
         monkeypatch.setattr(Path, "home", lambda: root_home)
         monkeypatch.setenv("HERMES_HOME", str(root_home / ".hermes"))
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: root_home / ".hermes")
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: root_home / ".hermes")
         monkeypatch.setattr(gateway_cli, "PROJECT_ROOT", project)
         monkeypatch.setattr(gateway_cli, "_detect_venv_dir", lambda: project / "venv")
         monkeypatch.setattr(gateway_cli, "get_python_path", lambda: str(venv_bin / "python"))
@@ -2773,7 +2773,7 @@ class TestDockerAwareGateway:
 
 
 class TestLegacyHermesUnitDetection:
-    """Tests for _find_legacy_hermes_units / has_legacy_hermes_units.
+    """Tests for _find_legacy_papylonation_units / has_legacy_papylonation_units.
 
     These guard against the scenario that tripped Luis in April 2026: an
     older install left a ``hermes.service`` unit behind when the service was
@@ -2789,7 +2789,7 @@ class TestLegacyHermesUnitDetection:
     # Minimal ExecStart that looks like our gateway
     _OUR_UNIT_TEXT = (
         "[Unit]\nDescription=Hermes Gateway\n[Service]\n"
-        "ExecStart=/usr/bin/python -m hermes_cli.main gateway run --replace\n"
+        "ExecStart=/usr/bin/python -m papylonation_cli.main gateway run --replace\n"
     )
 
     @staticmethod
@@ -2806,26 +2806,26 @@ class TestLegacyHermesUnitDetection:
         )
         return user_dir, system_dir
 
-    def test_detects_legacy_hermes_service_in_user_scope(self, tmp_path, monkeypatch):
+    def test_detects_legacy_papylonation_service_in_user_scope(self, tmp_path, monkeypatch):
         user_dir, _ = self._setup_search_paths(tmp_path, monkeypatch)
         legacy = user_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
 
         assert len(results) == 1
         name, path, is_system = results[0]
         assert name == "hermes.service"
         assert path == legacy
         assert is_system is False
-        assert gateway_cli.has_legacy_hermes_units() is True
+        assert gateway_cli.has_legacy_papylonation_units() is True
 
-    def test_detects_legacy_hermes_service_in_system_scope(self, tmp_path, monkeypatch):
+    def test_detects_legacy_papylonation_service_in_system_scope(self, tmp_path, monkeypatch):
         _, system_dir = self._setup_search_paths(tmp_path, monkeypatch)
         legacy = system_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
 
         assert len(results) == 1
         name, path, is_system = results[0]
@@ -2833,7 +2833,7 @@ class TestLegacyHermesUnitDetection:
         assert path == legacy
         assert is_system is True
 
-    def test_ignores_profile_unit_hermes_gateway_coder(self, tmp_path, monkeypatch):
+    def test_ignores_profile_unit_papylonation_gateway_coder(self, tmp_path, monkeypatch):
         """CRITICAL: profile units must NOT be flagged as legacy.
 
         Teknium's concern — ``hermes-gateway-coder.service`` is our standard
@@ -2853,12 +2853,12 @@ class TestLegacyHermesUnitDetection:
                 self._OUR_UNIT_TEXT, encoding="utf-8"
             )
 
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
 
         assert results == []
-        assert gateway_cli.has_legacy_hermes_units() is False
+        assert gateway_cli.has_legacy_papylonation_units() is False
 
-    def test_ignores_unrelated_hermes_service(self, tmp_path, monkeypatch):
+    def test_ignores_unrelated_papylonation_service(self, tmp_path, monkeypatch):
         """Third-party ``hermes.service`` that isn't ours stays untouched.
 
         If a user has some other package named ``hermes`` installed as a
@@ -2871,16 +2871,16 @@ class TestLegacyHermesUnitDetection:
             encoding="utf-8",
         )
 
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
 
         assert results == []
-        assert gateway_cli.has_legacy_hermes_units() is False
+        assert gateway_cli.has_legacy_papylonation_units() is False
 
     def test_returns_empty_when_no_legacy_files_exist(self, tmp_path, monkeypatch):
         self._setup_search_paths(tmp_path, monkeypatch)
 
-        assert gateway_cli._find_legacy_hermes_units() == []
-        assert gateway_cli.has_legacy_hermes_units() is False
+        assert gateway_cli._find_legacy_papylonation_units() == []
+        assert gateway_cli.has_legacy_papylonation_units() is False
 
     def test_detects_both_scopes_simultaneously(self, tmp_path, monkeypatch):
         """When a user has BOTH user-scope and system-scope legacy units,
@@ -2889,7 +2889,7 @@ class TestLegacyHermesUnitDetection:
         (user_dir / "hermes.service").write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
         (system_dir / "hermes.service").write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
 
         scopes = sorted(is_system for _, _, is_system in results)
         assert scopes == [False, True]
@@ -2898,15 +2898,15 @@ class TestLegacyHermesUnitDetection:
         """Older installs may have used different python invocations.
 
         ExecStart variants we've seen in the wild:
-          - python -m hermes_cli.main gateway run
-          - python path/to/hermes_cli/main.py gateway run
+          - python -m papylonation_cli.main gateway run
+          - python path/to/papylonation_cli/main.py gateway run
           - hermes gateway run   (direct binary)
           - python path/to/gateway/run.py
         """
         user_dir, _ = self._setup_search_paths(tmp_path, monkeypatch)
         variants = [
-            "ExecStart=/venv/bin/python -m hermes_cli.main gateway run --replace",
-            "ExecStart=/venv/bin/python /opt/hermes/hermes_cli/main.py gateway run",
+            "ExecStart=/venv/bin/python -m papylonation_cli.main gateway run --replace",
+            "ExecStart=/venv/bin/python /opt/hermes/papylonation_cli/main.py gateway run",
             "ExecStart=/usr/local/bin/hermes gateway run --replace",
             "ExecStart=/venv/bin/python /opt/hermes/gateway/run.py",
         ]
@@ -2917,7 +2917,7 @@ class TestLegacyHermesUnitDetection:
                 f"[Unit]\nDescription=Old Hermes\n[Service]\n{execstart}\n",
                 encoding="utf-8",
             )
-            results = gateway_cli._find_legacy_hermes_units()
+            results = gateway_cli._find_legacy_papylonation_units()
             assert len(results) == 1, f"Variant {i} not detected: {execstart!r}"
 
     def test_print_legacy_unit_warning_is_noop_when_empty(self, tmp_path, monkeypatch, capsys):
@@ -2955,16 +2955,16 @@ class TestLegacyHermesUnitDetection:
         monkeypatch.setattr(gateway_cli.Path, "read_text", raising_read_text)
 
         # Should not raise
-        results = gateway_cli._find_legacy_hermes_units()
+        results = gateway_cli._find_legacy_papylonation_units()
         assert results == []
 
 
 class TestRemoveLegacyHermesUnits:
-    """Tests for remove_legacy_hermes_units (the migration action)."""
+    """Tests for remove_legacy_papylonation_units (the migration action)."""
 
     _OUR_UNIT_TEXT = (
         "[Unit]\nDescription=Hermes Gateway\n[Service]\n"
-        "ExecStart=/usr/bin/python -m hermes_cli.main gateway run --replace\n"
+        "ExecStart=/usr/bin/python -m papylonation_cli.main gateway run --replace\n"
     )
 
     @staticmethod
@@ -2992,7 +2992,7 @@ class TestRemoveLegacyHermesUnits:
     def test_returns_zero_when_no_legacy_units(self, tmp_path, monkeypatch, capsys):
         self._setup(tmp_path, monkeypatch)
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 0
         assert remaining == []
@@ -3003,7 +3003,7 @@ class TestRemoveLegacyHermesUnits:
         legacy = user_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(
             interactive=False, dry_run=True
         )
 
@@ -3019,7 +3019,7 @@ class TestRemoveLegacyHermesUnits:
         legacy = user_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 1
         assert remaining == []
@@ -3035,7 +3035,7 @@ class TestRemoveLegacyHermesUnits:
         legacy = system_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 0
         assert remaining == [legacy]
@@ -3048,7 +3048,7 @@ class TestRemoveLegacyHermesUnits:
         legacy = system_dir / "hermes.service"
         legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 1
         assert remaining == []
@@ -3069,7 +3069,7 @@ class TestRemoveLegacyHermesUnits:
         user_legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
         system_legacy.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 2
         assert remaining == []
@@ -3088,7 +3088,7 @@ class TestRemoveLegacyHermesUnits:
         default_unit = user_dir / "hermes-gateway.service"
         default_unit.write_text(self._OUR_UNIT_TEXT, encoding="utf-8")
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=False)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=False)
 
         assert removed == 0
         assert remaining == []
@@ -3104,7 +3104,7 @@ class TestRemoveLegacyHermesUnits:
 
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", lambda *a, **k: False)
 
-        removed, remaining = gateway_cli.remove_legacy_hermes_units(interactive=True)
+        removed, remaining = gateway_cli.remove_legacy_papylonation_units(interactive=True)
 
         assert removed == 0
         assert remaining == [legacy]
@@ -3116,7 +3116,7 @@ class TestMigrateLegacyCommand:
 
     def test_migrate_legacy_subparser_accepts_dry_run_and_yes(self):
         """Verify the argparse subparser is registered and parses flags."""
-        import hermes_cli.main as cli_main
+        import papylonation_cli.main as cli_main
 
         parser = cli_main.build_parser() if hasattr(cli_main, "build_parser") else None
         # Fall back to calling main's setup helper if direct access isn't exposed
@@ -3128,11 +3128,11 @@ class TestMigrateLegacyCommand:
 
         project_root = cli_main.PROJECT_ROOT if hasattr(cli_main, "PROJECT_ROOT") else None
         if project_root is None:
-            import hermes_cli.gateway as gw
+            import papylonation_cli.gateway as gw
             project_root = gw.PROJECT_ROOT
 
         result = subprocess.run(
-            [sys.executable, "-m", "hermes_cli.main", "gateway", "--help"],
+            [sys.executable, "-m", "papylonation_cli.main", "gateway", "--help"],
             cwd=str(project_root),
             capture_output=True,
             text=True,
@@ -3152,7 +3152,7 @@ class TestMigrateLegacyCommand:
             called["dry_run"] = dry_run
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "remove_legacy_hermes_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_papylonation_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
 
@@ -3170,7 +3170,7 @@ class TestGatewayStatusParser:
         import sys
 
         result = subprocess.run(
-            [sys.executable, "-m", "hermes_cli.main", "gateway", "status", "-l", "--help"],
+            [sys.executable, "-m", "papylonation_cli.main", "gateway", "status", "-l", "--help"],
             cwd=str(gateway_cli.PROJECT_ROOT),
             capture_output=True,
             text=True,
@@ -3190,7 +3190,7 @@ class TestGatewayStatusParser:
             called["dry_run"] = dry_run
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "remove_legacy_hermes_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_papylonation_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
 
@@ -3231,9 +3231,9 @@ class TestSystemdInstallOffersLegacyRemoval:
             remove_called["interactive"] = interactive
             return 1, []
 
-        # has_legacy_hermes_units must return True
-        monkeypatch.setattr(gateway_cli, "has_legacy_hermes_units", lambda: True)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_hermes_units", fake_remove)
+        # has_legacy_papylonation_units must return True
+        monkeypatch.setattr(gateway_cli, "has_legacy_papylonation_units", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_papylonation_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "print_legacy_unit_warning", lambda: None)
         # Answer "yes" to the legacy-removal prompt
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", lambda *a, **k: True)
@@ -3271,8 +3271,8 @@ class TestSystemdInstallOffersLegacyRemoval:
             remove_called["invoked"] = True
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "has_legacy_hermes_units", lambda: True)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_hermes_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "has_legacy_papylonation_units", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_papylonation_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "print_legacy_unit_warning", lambda: None)
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", lambda *a, **k: False)
 
@@ -3316,8 +3316,8 @@ class TestSystemdInstallOffersLegacyRemoval:
             remove_called["invoked"] = True
             return 0, []
 
-        monkeypatch.setattr(gateway_cli, "has_legacy_hermes_units", lambda: False)
-        monkeypatch.setattr(gateway_cli, "remove_legacy_hermes_units", fake_remove)
+        monkeypatch.setattr(gateway_cli, "has_legacy_papylonation_units", lambda: False)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_papylonation_units", fake_remove)
         monkeypatch.setattr(gateway_cli, "prompt_yes_no", counting_prompt)
 
         unit_path = tmp_path / "hermes-gateway.service"
@@ -3516,22 +3516,22 @@ class TestServiceWorkingDirIsStable:
     deleted checkout can't crash-loop the unit on CHDIR (status=200).
     """
 
-    def test_stable_working_dir_uses_hermes_home(self, tmp_path, monkeypatch):
+    def test_stable_working_dir_uses_papylonation_home(self, tmp_path, monkeypatch):
         home = tmp_path / ".hermes"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: home)
         assert Path(gateway_cli._stable_service_working_dir()) == home.resolve()
 
     def test_stable_working_dir_falls_back_to_project_root(self, tmp_path, monkeypatch):
         # HERMES_HOME points somewhere that does not exist -> fall back.
         missing = tmp_path / "does-not-exist" / ".hermes"
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: missing)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: missing)
         assert gateway_cli._stable_service_working_dir() == str(gateway_cli.PROJECT_ROOT)
 
-    def test_user_unit_workingdirectory_is_hermes_home_not_checkout(self, tmp_path, monkeypatch):
+    def test_user_unit_workingdirectory_is_papylonation_home_not_checkout(self, tmp_path, monkeypatch):
         home = tmp_path / ".hermes"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: home)
         unit = gateway_cli.generate_systemd_unit(system=False)
         wd = [l for l in unit.splitlines() if l.startswith("WorkingDirectory=")]
         assert wd, "unit has no WorkingDirectory line"
@@ -3540,12 +3540,12 @@ class TestServiceWorkingDirIsStable:
         # The bug class: never pin cwd inside a transient worktree checkout.
         assert "/.worktrees/" not in value
 
-    def test_launchd_workingdirectory_is_hermes_home(self, tmp_path, monkeypatch):
+    def test_launchd_workingdirectory_is_papylonation_home(self, tmp_path, monkeypatch):
         import re
 
         home = tmp_path / ".hermes"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: home)
         plist = gateway_cli.generate_launchd_plist()
         m = re.search(r"<key>WorkingDirectory</key>\s*<string>(.*?)</string>", plist)
         assert m, "plist has no WorkingDirectory entry"
@@ -3562,7 +3562,7 @@ class TestServiceWorkingDirIsStable:
         """
         home = tmp_path / ".hermes"
         home.mkdir()
-        monkeypatch.setattr(gateway_cli, "get_hermes_home", lambda: home)
+        monkeypatch.setattr(gateway_cli, "get_papylonation_home", lambda: home)
         plist = gateway_cli.generate_launchd_plist()
 
         # Scalar <true/> must be present immediately after the KeepAlive key

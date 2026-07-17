@@ -7,7 +7,7 @@ lifting them into a mixin that ``GatewayRunner`` inherits keeps every
 ``self._handle_*_command`` dispatch + test reference working via the MRO, while
 removing the bulk from run.py.
 
-Module-level run.py helpers a handler needs (``_hermes_home``,
+Module-level run.py helpers a handler needs (``_papylonation_home``,
 ``_load_gateway_config``, ``_resolve_gateway_model``, etc.) are imported lazily
 inside the handler body — a deferred ``from gateway.run import ...`` resolves at
 call time (run.py fully loaded by then), avoiding an import cycle.
@@ -39,7 +39,7 @@ from gateway.session import (
     build_session_key,
     is_shared_multi_user_session,
 )
-from hermes_cli.config import atomic_config_write, cfg_get, clear_model_endpoint_credentials
+from papylonation_cli.config import atomic_config_write, cfg_get, clear_model_endpoint_credentials
 from utils import (
     atomic_json_write,
     base_url_host_matches,
@@ -226,7 +226,7 @@ class GatewaySlashCommandsMixin:
 
         # Fire plugin on_session_finalize hook (session boundary)
         try:
-            from hermes_cli.plugins import invoke_hook as _invoke_hook
+            from papylonation_cli.plugins import invoke_hook as _invoke_hook
             _invoke_hook(
                 "on_session_finalize",
                 session_id=_old_sid,
@@ -273,7 +273,7 @@ class GatewaySlashCommandsMixin:
         _title_arg = event.get_command_args().strip()
         _title_note = ""
         if _title_arg and self._session_db and new_entry:
-            from hermes_state import SessionDB
+            from papylonation_state import SessionDB
             try:
                 sanitized = SessionDB.sanitize_title(_title_arg)
             except ValueError as e:
@@ -305,7 +305,7 @@ class GatewaySlashCommandsMixin:
 
         # Fire plugin on_session_reset hook (new session guaranteed to exist)
         try:
-            from hermes_cli.plugins import invoke_hook as _invoke_hook
+            from papylonation_cli.plugins import invoke_hook as _invoke_hook
             _new_sid = new_entry.session_id if new_entry else None
             _invoke_hook(
                 "on_session_reset",
@@ -320,7 +320,7 @@ class GatewaySlashCommandsMixin:
 
         # Append a random tip to the reset message
         try:
-            from hermes_cli.tips import get_random_tip
+            from papylonation_cli.tips import get_random_tip
             _tip_line = t("gateway.reset.tip", tip=get_random_tip())
         except Exception:
             _tip_line = ""
@@ -344,8 +344,8 @@ class GatewaySlashCommandsMixin:
         ``_run_agent`` and ``_reset_notice_session_info`` — and the command
         reports the active profile and default home, byte-identical to before.
         """
-        from hermes_constants import display_hermes_home
-        from hermes_cli.profiles import get_active_profile_name
+        from papylonation_constants import display_papylonation_home
+        from papylonation_cli.profiles import get_active_profile_name
 
         multiplexed = getattr(
             getattr(self, "config", None), "multiplex_profiles", False
@@ -363,11 +363,11 @@ class GatewaySlashCommandsMixin:
 
                 profile_home = self._resolve_profile_home_for_source(source)
                 with _profile_runtime_scope(profile_home):
-                    display = display_hermes_home()
+                    display = display_papylonation_home()
             except Exception:
-                display = display_hermes_home()
+                display = display_papylonation_home()
         else:
-            display = display_hermes_home()
+            display = display_papylonation_home()
 
         lines = [
             t("gateway.profile.header", profile=profile_name),
@@ -444,7 +444,7 @@ class GatewaySlashCommandsMixin:
         import asyncio
         import re
         import shlex
-        from hermes_cli.kanban import run_slash
+        from papylonation_cli.kanban import run_slash
 
         text = (event.text or "").strip()
         # Strip the leading "/kanban" (with or without slash), leaving args.
@@ -498,7 +498,7 @@ class GatewaySlashCommandsMixin:
                     user_id = str(getattr(source, "user_id", "") or "") or None
                     if platform_str and chat_id:
                         def _sub():
-                            from hermes_cli import kanban_db as _kb
+                            from papylonation_cli import kanban_db as _kb
                             conn = _kb.connect(board=requested_board)
                             try:
                                 _kb.add_notify_sub(
@@ -1261,7 +1261,7 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_restart_command(self, event: MessageEvent) -> Union[str, EphemeralReply]:
         """Handle /restart command - drain active work, then restart the gateway."""
-        from gateway.run import _hermes_home
+        from gateway.run import _papylonation_home
         # Defensive idempotency check: if the previous gateway process
         # recorded this same /restart (same platform + update_id) and the new
         # process is seeing it *again*, this is a re-delivery caused by PTB's
@@ -1311,7 +1311,7 @@ class GatewaySlashCommandsMixin:
                 except Exception:
                     self._restart_command_source = event.source
             atomic_json_write(
-                _hermes_home / ".restart_notify.json",
+                _papylonation_home / ".restart_notify.json",
                 notify_data,
                 indent=None,
             )
@@ -1331,7 +1331,7 @@ class GatewaySlashCommandsMixin:
             if event.platform_update_id is not None:
                 dedup_data["update_id"] = event.platform_update_id
             atomic_json_write(
-                _hermes_home / ".restart_last_processed.json",
+                _papylonation_home / ".restart_last_processed.json",
                 dedup_data,
                 indent=None,
             )
@@ -1362,14 +1362,14 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_version_command(self, event: MessageEvent) -> str:
         """Handle /version — show the running Hermes Agent version."""
-        from hermes_cli.banner import format_banner_version_label
+        from papylonation_cli.banner import format_banner_version_label
 
         return format_banner_version_label()
 
     async def _handle_help_command(self, event: MessageEvent) -> str:
         """Handle /help command - list available commands."""
         from gateway.run import _telegramize_command_mentions
-        from hermes_cli.commands import gateway_help_lines
+        from papylonation_cli.commands import gateway_help_lines
         lines = [
             t("gateway.help.header"),
             *gateway_help_lines(),
@@ -1394,7 +1394,7 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_commands_command(self, event: MessageEvent) -> str:
         from gateway.run import _telegramize_command_mentions
-        from hermes_cli.commands import gateway_help_lines
+        from papylonation_cli.commands import gateway_help_lines
 
         raw_args = event.get_command_args().strip()
         if raw_args:
@@ -1459,15 +1459,15 @@ class GatewaySlashCommandsMixin:
           /model <name> --provider <provider> — switch provider + model
           /model --provider <provider>        — switch to provider, auto-detect model
         """
-        from gateway.run import _hermes_home, _load_gateway_config
+        from gateway.run import _papylonation_home, _load_gateway_config
         import yaml
-        from hermes_cli.model_switch import (
+        from papylonation_cli.model_switch import (
             switch_model as _switch_model, parse_model_flags,
             resolve_persist_behavior,
             list_authenticated_providers,
             list_picker_providers,
         )
-        from hermes_cli.providers import get_label
+        from papylonation_cli.providers import get_label
 
         raw_args = event.get_command_args().strip()
         source = event.source
@@ -1490,7 +1490,7 @@ class GatewaySlashCommandsMixin:
         # --refresh: bust the disk cache so the picker shows live data.
         if force_refresh:
             try:
-                from hermes_cli.models import clear_provider_models_cache
+                from papylonation_cli.models import clear_provider_models_cache
                 clear_provider_models_cache()
             except Exception:
                 pass
@@ -1502,7 +1502,7 @@ class GatewaySlashCommandsMixin:
         current_api_key = ""
         user_provs = None
         custom_provs = None
-        config_path = (_command_profile_home or _hermes_home) / "config.yaml"
+        config_path = (_command_profile_home or _papylonation_home) / "config.yaml"
         try:
             cfg = _load_gateway_config()
             if cfg:
@@ -1513,7 +1513,7 @@ class GatewaySlashCommandsMixin:
                     current_base_url = model_cfg.get("base_url", "")
                 user_provs = cfg.get("providers")
                 try:
-                    from hermes_cli.config import get_compatible_custom_providers
+                    from papylonation_cli.config import get_compatible_custom_providers
                     custom_provs = get_compatible_custom_providers(cfg)
                 except Exception:
                     custom_provs = cfg.get("custom_providers")
@@ -1599,7 +1599,7 @@ class GatewaySlashCommandsMixin:
                             return t("gateway.model.error_prefix", error=result.error_message)
 
                         try:
-                            from hermes_cli.context_switch_guard import (
+                            from papylonation_cli.context_switch_guard import (
                                 enrich_model_switch_warnings_for_gateway,
                             )
 
@@ -1727,7 +1727,7 @@ class GatewaySlashCommandsMixin:
                                     _persist_model_cfg["base_url"] = result.base_url
                                 if str(result.target_provider or "").strip().lower() != "custom":
                                     clear_model_endpoint_credentials(_persist_model_cfg, clear_base_url=True)
-                                from hermes_cli.config import save_config
+                                from papylonation_cli.config import save_config
                                 save_config(_persist_cfg)
                             except Exception as e:
                                 logger.warning("Failed to persist model switch: %s", e)
@@ -1737,7 +1737,7 @@ class GatewaySlashCommandsMixin:
                         lines = [t("gateway.model.switched", model=result.new_model)]
                         lines.append(t("gateway.model.provider_label", provider=plabel))
                         mi = result.model_info
-                        from hermes_cli.model_switch import resolve_display_context_length
+                        from papylonation_cli.model_switch import resolve_display_context_length
                         _sw_config_ctx = None
                         try:
                             _sw_cfg = _load_gateway_config()
@@ -1857,7 +1857,7 @@ class GatewaySlashCommandsMixin:
             return t("gateway.model.error_prefix", error=result.error_message)
 
         try:
-            from hermes_cli.context_switch_guard import (
+            from papylonation_cli.context_switch_guard import (
                 enrich_model_switch_warnings_for_gateway,
             )
 
@@ -1992,7 +1992,7 @@ class GatewaySlashCommandsMixin:
                         model_cfg["base_url"] = result.base_url
                     if str(result.target_provider or "").strip().lower() != "custom":
                         clear_model_endpoint_credentials(model_cfg, clear_base_url=True)
-                    from hermes_cli.config import save_config
+                    from papylonation_cli.config import save_config
                     save_config(cfg)
                 except Exception as e:
                     logger.warning("Failed to persist model switch: %s", e)
@@ -2005,7 +2005,7 @@ class GatewaySlashCommandsMixin:
             # Context: always resolve via the provider-aware chain so Codex OAuth,
             # Copilot, and Nous-enforced caps win over the raw models.dev entry.
             mi = result.model_info
-            from hermes_cli.model_switch import resolve_display_context_length
+            from papylonation_cli.model_switch import resolve_display_context_length
             _sw2_config_ctx = None
             try:
                 _sw2_cfg = _load_gateway_config()
@@ -2058,7 +2058,7 @@ class GatewaySlashCommandsMixin:
         # on a cache miss, so run it off the event loop.
         _cost_warning = None
         try:
-            from hermes_cli.model_cost_guard import expensive_model_warning
+            from papylonation_cli.model_cost_guard import expensive_model_warning
 
             _cost_warning = await asyncio.to_thread(
                 expensive_model_warning,
@@ -2109,7 +2109,7 @@ class GatewaySlashCommandsMixin:
         On change, the cached agent for this session is evicted so the next
         message creates a fresh AIAgent with the new api_mode wired in
         (avoids prompt-cache invalidation mid-session)."""
-        from hermes_cli import codex_runtime_switch as crs
+        from papylonation_cli import codex_runtime_switch as crs
 
         raw_args = event.get_command_args().strip() if event else ""
         new_value, errors = crs.parse_args(raw_args)
@@ -2118,7 +2118,7 @@ class GatewaySlashCommandsMixin:
 
         # Load + persist via the same helpers used for /model and /yolo
         try:
-            from hermes_cli.config import load_config, save_config
+            from papylonation_cli.config import load_config, save_config
         except Exception as exc:
             return f"❌ Could not load config: {exc}"
         cfg = load_config()
@@ -2144,11 +2144,11 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_personality_command(self, event: MessageEvent) -> str:
         """Handle /personality command - list or set a personality."""
-        from gateway.run import _hermes_home, _load_gateway_config
-        from hermes_constants import display_hermes_home
+        from gateway.run import _papylonation_home, _load_gateway_config
+        from papylonation_constants import display_papylonation_home
 
         args = event.get_command_args().strip().lower()
-        config_path = _hermes_home / 'config.yaml'
+        config_path = _papylonation_home / 'config.yaml'
 
         try:
             config = _load_gateway_config()
@@ -2158,7 +2158,7 @@ class GatewaySlashCommandsMixin:
             personalities = {}
 
         if not personalities:
-            return t("gateway.personality.none_configured", path=display_hermes_home())
+            return t("gateway.personality.none_configured", path=display_papylonation_home())
 
         if not args:
             lines = [t("gateway.personality.header")]
@@ -2337,7 +2337,7 @@ class GatewaySlashCommandsMixin:
                 return "Usage: /goal draft <objective in plain language>"
             try:
                 import asyncio
-                from hermes_cli.goals import draft_contract
+                from papylonation_cli.goals import draft_contract
 
                 draft_contract_obj = await asyncio.get_running_loop().run_in_executor(
                     None, draft_contract, objective
@@ -2351,7 +2351,7 @@ class GatewaySlashCommandsMixin:
             # Inline `field: value` lines parse into a completion contract;
             # the remaining prose is the goal headline. Plain free-form goals
             # (no such lines) behave exactly as before.
-            from hermes_cli.goals import parse_contract
+            from papylonation_cli.goals import parse_contract
 
             headline, parsed = parse_contract(args)
             args = headline or args
@@ -2502,7 +2502,7 @@ class GatewaySlashCommandsMixin:
 
         # Save to .env so it persists across restarts
         try:
-            from hermes_cli.config import save_env_value
+            from papylonation_cli.config import save_env_value
             save_env_value(env_key, str(chat_id))
             # Keep thread/topic routing explicit and clear stale values when
             # /sethome is run from the parent chat instead of a thread.
@@ -2609,14 +2609,14 @@ class GatewaySlashCommandsMixin:
 
     async def _handle_rollback_command(self, event: MessageEvent) -> str:
         """Handle /rollback command — list or restore filesystem checkpoints."""
-        from gateway.run import _hermes_home
+        from gateway.run import _papylonation_home
         from tools.checkpoint_manager import CheckpointManager, format_checkpoint_list
 
         # Read checkpoint config from config.yaml
         cp_cfg = {}
         try:
             import yaml as _y
-            _cfg_path = _hermes_home / "config.yaml"
+            _cfg_path = _papylonation_home / "config.yaml"
             if _cfg_path.exists():
                 with open(_cfg_path, encoding="utf-8") as _f:
                     _data = _y.safe_load(_f) or {}
@@ -2708,8 +2708,8 @@ class GatewaySlashCommandsMixin:
         """Save a dot-separated key to config.yaml (shared by /reasoning, /fast
         and their interactive pickers)."""
         import yaml
-        from gateway.run import _hermes_home
-        config_path = _hermes_home / "config.yaml"
+        from gateway.run import _papylonation_home
+        config_path = _papylonation_home / "config.yaml"
         try:
             user_config = {}
             if config_path.exists():
@@ -2741,7 +2741,7 @@ class GatewaySlashCommandsMixin:
         and the interactive choice picker, so both surfaces stay in lockstep
         with the canonical parser.
         """
-        from hermes_constants import parse_reasoning_effort
+        from papylonation_constants import parse_reasoning_effort
 
         value = (value or "").strip().lower()
 
@@ -2787,7 +2787,7 @@ class GatewaySlashCommandsMixin:
 
     def _reasoning_picker_choices(self, current_effort: str) -> list:
         """Build the choice list for the interactive /reasoning picker."""
-        from hermes_constants import VALID_REASONING_EFFORTS
+        from papylonation_constants import VALID_REASONING_EFFORTS
 
         choices = [
             {
@@ -2952,15 +2952,15 @@ class GatewaySlashCommandsMixin:
         Gate changes persist to config.yaml and evict the cached agent so the
         new setting takes effect on the next message.
         """
-        from gateway.run import _hermes_home
-        from hermes_cli.write_approval_commands import handle_pending_subcommand
+        from gateway.run import _papylonation_home
+        from papylonation_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
         from tools.memory_tool import load_on_disk_store
 
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _hermes_home / "config.yaml"
+        config_path = _papylonation_home / "config.yaml"
 
         def _set_approval(enabled: bool):
             import yaml
@@ -3002,14 +3002,14 @@ class GatewaySlashCommandsMixin:
         the write-approval ``diff <id>``; the CLI also has an unrelated
         ``hermes skills diff <name>`` that diffs a bundled skill vs stock.)
         """
-        from gateway.run import _hermes_home
-        from hermes_cli.write_approval_commands import handle_pending_subcommand
+        from gateway.run import _papylonation_home
+        from papylonation_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
 
         raw_args = event.get_command_args().strip()
         args = raw_args.split() if raw_args else []
         session_key = self._session_key_for_source(event.source)
-        config_path = _hermes_home / "config.yaml"
+        config_path = _papylonation_home / "config.yaml"
 
         gate_on = wa.write_approval_enabled(wa.SKILLS)
         wants_toggle = bool(args) and args[0].lower() in {"approval", "mode"}
@@ -3051,7 +3051,7 @@ class GatewaySlashCommandsMixin:
     async def _handle_fast_command(self, event: MessageEvent) -> Optional[str]:
         """Handle /fast — mirror the CLI Priority Processing toggle in gateway chats."""
         from gateway.run import _load_gateway_config, _resolve_gateway_model
-        from hermes_cli.models import model_supports_fast_mode
+        from papylonation_cli.models import model_supports_fast_mode
 
         args = event.get_command_args().strip().lower()
         self._service_tier = self._load_service_tier()
@@ -3138,9 +3138,9 @@ class GatewaySlashCommandsMixin:
         ``display.platforms.<platform>.tool_progress`` so each channel can
         have its own verbosity level independently.
         """
-        from gateway.run import _hermes_home, _load_gateway_config, _platform_config_key
+        from gateway.run import _papylonation_home, _load_gateway_config, _platform_config_key
 
-        config_path = _hermes_home / "config.yaml"
+        config_path = _papylonation_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- check config gate ------------------------------------------------
@@ -3207,10 +3207,10 @@ class GatewaySlashCommandsMixin:
         are respected but not modified here — edit config.yaml directly for
         per-platform control.
         """
-        from gateway.run import _hermes_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
+        from gateway.run import _papylonation_home, _load_gateway_config, _platform_config_key, _resolve_gateway_model
         from gateway.runtime_footer import resolve_footer_config
 
-        config_path = _hermes_home / "config.yaml"
+        config_path = _papylonation_home / "config.yaml"
         platform_key = _platform_config_key(event.source.platform)
 
         # --- parse argument -------------------------------------------------
@@ -3301,7 +3301,7 @@ class GatewaySlashCommandsMixin:
 
         # Parse args: either a focus topic (full compress) or the
         # boundary-aware "here [N]" form (partial compress).
-        from hermes_cli.partial_compress import (
+        from papylonation_cli.partial_compress import (
             extract_compress_flags,
             parse_partial_compress_args,
             rejoin_compressed_head_and_tail,
@@ -3576,7 +3576,7 @@ class GatewaySlashCommandsMixin:
         if source.platform != Platform.TELEGRAM or source.chat_type != "dm":
             return t("gateway.topic.not_telegram_dm")
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from papylonation_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
         # Authorization: /topic activates multi-session mode and mutates
@@ -3666,7 +3666,7 @@ class GatewaySlashCommandsMixin:
         session_id = session_entry.session_id
 
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from papylonation_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
         # Ensure session exists in SQLite DB (it may only exist in session_store
@@ -3693,7 +3693,7 @@ class GatewaySlashCommandsMixin:
         if title_arg:
             # Sanitize the title before setting
             try:
-                from hermes_state import SessionDB
+                from papylonation_state import SessionDB
                 sanitized = SessionDB.sanitize_title(title_arg)
             except ValueError as e:
                 return t("gateway.shared.warn_passthrough", error=e)
@@ -3734,7 +3734,7 @@ class GatewaySlashCommandsMixin:
     async def _handle_resume_command(self, event: MessageEvent) -> str:
         """Handle /resume command — list or switch to a previous session."""
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from papylonation_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
         source = event.source
@@ -3910,10 +3910,10 @@ class GatewaySlashCommandsMixin:
     async def _handle_sessions_command(self, event: MessageEvent) -> str:
         """Handle /sessions — list previous sessions for gateway chats."""
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from papylonation_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
-        from hermes_cli.session_listing import (
+        from papylonation_cli.session_listing import (
             format_gateway_session_listing,
             parse_session_listing_args,
             query_session_listing,
@@ -3983,7 +3983,7 @@ class GatewaySlashCommandsMixin:
         import uuid as _uuid
 
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from papylonation_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
         source = event.source
@@ -4350,7 +4350,7 @@ class GatewaySlashCommandsMixin:
                     i += 1
 
         try:
-            from hermes_state import SessionDB
+            from papylonation_state import SessionDB
             from agent.insights import InsightsEngine
 
             loop = asyncio.get_running_loop()
@@ -4694,7 +4694,7 @@ class GatewaySlashCommandsMixin:
         full log uploads should use ``hermes debug share`` from the CLI.
         """
         import asyncio
-        from hermes_cli.debug import (
+        from papylonation_cli.debug import (
             _capture_dump, collect_debug_report,
             upload_to_pastebin, _schedule_auto_delete,
             _GATEWAY_PRIVACY_NOTICE, _best_effort_sweep_expired_pastes,
@@ -4738,12 +4738,12 @@ class GatewaySlashCommandsMixin:
         files are written so either the current gateway process or the next one
         can notify the user when the update finishes.
         """
-        from gateway.run import _hermes_home, _resolve_hermes_bin
+        from gateway.run import _papylonation_home, _resolve_papylonation_bin
         import json
         import shutil
         import subprocess
         from datetime import datetime
-        from hermes_cli.config import is_managed, format_managed_message
+        from papylonation_cli.config import is_managed, format_managed_message
 
         # Block non-messaging platforms (API server, webhooks, ACP)
         platform = event.source.platform
@@ -4767,13 +4767,13 @@ class GatewaySlashCommandsMixin:
         if not git_dir.exists():
             return t("gateway.update.not_git_repo")
 
-        hermes_cmd = _resolve_hermes_bin()
-        if not hermes_cmd:
-            return t("gateway.update.hermes_cmd_not_found")
+        papylonation_cmd = _resolve_papylonation_bin()
+        if not papylonation_cmd:
+            return t("gateway.update.papylonation_cmd_not_found")
 
-        pending_path = _hermes_home / ".update_pending.json"
-        output_path = _hermes_home / ".update_output.txt"
-        exit_code_path = _hermes_home / ".update_exit_code"
+        pending_path = _papylonation_home / ".update_pending.json"
+        output_path = _papylonation_home / ".update_output.txt"
+        exit_code_path = _papylonation_home / ".update_exit_code"
         session_key = self._session_key_for_source(event.source)
         pending = {
             "platform": event.source.platform.value,
@@ -4819,9 +4819,9 @@ class GatewaySlashCommandsMixin:
         try:
             if sys.platform == "win32":
                 import textwrap
-                from hermes_cli._subprocess_compat import windows_detach_popen_kwargs
+                from papylonation_cli._subprocess_compat import windows_detach_popen_kwargs
 
-                # hermes_cmd is a list of argv parts we can pass directly
+                # papylonation_cmd is a list of argv parts we can pass directly
                 # (no shell-quoting needed).
                 helper = textwrap.dedent(
                     """
@@ -4842,16 +4842,16 @@ class GatewaySlashCommandsMixin:
                     [
                         sys.executable, "-c", helper,
                         str(output_path), str(exit_code_path),
-                        *hermes_cmd, "update", "--gateway",
+                        *papylonation_cmd, "update", "--gateway",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     **windows_detach_popen_kwargs(),
                 )
             else:
-                hermes_cmd_str = " ".join(shlex.quote(part) for part in hermes_cmd)
+                papylonation_cmd_str = " ".join(shlex.quote(part) for part in papylonation_cmd)
                 update_cmd = (
-                    f"PYTHONUNBUFFERED=1 {hermes_cmd_str} update --gateway"
+                    f"PYTHONUNBUFFERED=1 {papylonation_cmd_str} update --gateway"
                     f" > {shlex.quote(str(output_path))} 2>&1; "
                     # Avoid `status=$?`: `status` is a read-only special parameter
                     # in zsh, and this command string is copied/reused in macOS/zsh

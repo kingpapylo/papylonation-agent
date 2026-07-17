@@ -22,7 +22,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from hermes_constants import get_hermes_home, _get_platform_default_hermes_home
+from papylonation_constants import get_papylonation_home, _get_platform_default_papylonation_home
 from typing import Any, Optional
 from utils import atomic_json_write
 
@@ -47,12 +47,12 @@ _gateway_running_pid_cache_lock = threading.Lock()
 _gateway_running_pid_cache: dict[tuple[str, bool, bool], tuple[float, tuple[Any, ...], Optional[int]]] = {}
 
 
-def _get_process_hermes_home() -> Path:
+def _get_process_papylonation_home() -> Path:
     """Return the process-level HERMES_HOME, skipping context-local overrides.
 
     Gateway identity files (PID, lock, runtime status, takeover/stop markers)
     must always live in the directory the gateway process was launched with.
-    ``get_hermes_home()`` honors ``_HERMES_HOME_OVERRIDE`` contextvar used for
+    ``get_papylonation_home()`` honors ``_HERMES_HOME_OVERRIDE`` contextvar used for
     per-session profile dispatch, which would route these files into the wrong
     profile directory when a profile-context task happens to be active at write
     time.  See issue #56986.
@@ -60,12 +60,12 @@ def _get_process_hermes_home() -> Path:
     val = os.environ.get("HERMES_HOME", "").strip()
     if val:
         return Path(val)
-    return _get_platform_default_hermes_home()
+    return _get_platform_default_papylonation_home()
 
 
 def _get_pid_path() -> Path:
     """Return the path to the gateway PID file, respecting HERMES_HOME."""
-    home = _get_process_hermes_home()
+    home = _get_process_papylonation_home()
     return home / "gateway.pid"
 
 
@@ -73,7 +73,7 @@ def _get_gateway_lock_path(pid_path: Optional[Path] = None) -> Path:
     """Return the path to the runtime gateway lock file."""
     if pid_path is not None:
         return pid_path.with_name(_GATEWAY_LOCK_FILENAME)
-    home = _get_process_hermes_home()
+    home = _get_process_papylonation_home()
     return home / _GATEWAY_LOCK_FILENAME
 
 
@@ -105,7 +105,7 @@ def terminate_pid(pid: int, *, force: bool = False) -> None:
         # CREATE_NO_WINDOW: terminate_pid runs from the windowless pythonw.exe
         # gateway/desktop backend, so a bare taskkill spawn would flash a
         # conhost window on every force-kill.
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from papylonation_cli._subprocess_compat import windows_hide_flags
 
         try:
             result = subprocess.run(
@@ -223,7 +223,7 @@ def _gateway_command_subcommand(command: str | None) -> str | None:
 
     Lifecycle decisions (is the gateway up? did restart relaunch it?) must not
     fire on loose substring matches.  The previous ``"... gateway" in cmdline``
-    test also matched ``hermes_cli.main gateway status`` and even unrelated
+    test also matched ``papylonation_cli.main gateway status`` and even unrelated
     processes like ``python -m tui_gateway`` -- which made ``restart()`` race
     against a still-draining old process and ``status``/``start`` report false
     positives.  This requires the actual ``gateway`` subcommand followed by
@@ -260,8 +260,8 @@ def _gateway_command_subcommand(command: str | None) -> str | None:
 
     joined = " ".join(tokens)
     has_gateway_entry = (
-        "hermes_cli.main" in joined
-        or "hermes_cli/main.py" in joined
+        "papylonation_cli.main" in joined
+        or "papylonation_cli/main.py" in joined
         or any(t.rsplit("/", 1)[-1] in ("hermes", "hermes.exe") for t in tokens)
     )
     if not has_gateway_entry:
@@ -348,7 +348,7 @@ def _profile_name_for_home(profile_home: Path) -> Optional[str]:
 def _command_line_belongs_to_profile(command: str, profile_home: Path) -> bool:
     """Return True when a gateway command line belongs to ``profile_home``.
 
-    Mirrors ``hermes_cli.gateway._matches_current_profile`` so the dashboard's
+    Mirrors ``papylonation_cli.gateway._matches_current_profile`` so the dashboard's
     cross-profile liveness fallback scopes a live PID to the *right* profile.
     In a per-profile container, one profile's stale ``gateway_state.json`` can
     record a PID that the OS has since recycled onto a DIFFERENT profile's live
@@ -367,7 +367,7 @@ def _command_line_belongs_to_profile(command: str, profile_home: Path) -> bool:
         return (
             f"--profile {profile_lc}" in command_lc
             or f"-p {profile_lc}" in command_lc
-            or f"hermes_home={home_lc}" in command_lc
+            or f"papylonation_home={home_lc}" in command_lc
         )
 
     # Default/root profile: the gateway runs with no profile flag. Accept unless
@@ -377,7 +377,7 @@ def _command_line_belongs_to_profile(command: str, profile_home: Path) -> bool:
     # absence is not disqualifying — only a conflicting explicit value is.
     if "--profile " in command_lc or " -p " in command_lc:
         return False
-    if "hermes_home=" in command_lc and f"hermes_home={home_lc}" not in command_lc:
+    if "papylonation_home=" in command_lc and f"papylonation_home={home_lc}" not in command_lc:
         return False
     return True
 
@@ -1189,13 +1189,13 @@ _PLANNED_STOP_MARKER_TTL_S = 60
 
 def _get_takeover_marker_path() -> Path:
     """Return the path to the --replace takeover marker file."""
-    home = _get_process_hermes_home()
+    home = _get_process_papylonation_home()
     return home / _TAKEOVER_MARKER_FILENAME
 
 
 def _get_planned_stop_marker_path() -> Path:
     """Return the path to the intentional gateway stop marker file."""
-    home = _get_process_hermes_home()
+    home = _get_process_papylonation_home()
     return home / _PLANNED_STOP_MARKER_FILENAME
 
 
@@ -1249,8 +1249,8 @@ def _consume_pid_marker_for_self(
     # absent as "same home" so old markers and single-profile setups are
     # unaffected. Leave a mismatched marker in place so the correct
     # profile can still consume it.
-    replacer_home = record.get("replacer_hermes_home")
-    if replacer_home is not None and replacer_home != str(_get_process_hermes_home()):
+    replacer_home = record.get("replacer_papylonation_home")
+    if replacer_home is not None and replacer_home != str(_get_process_papylonation_home()):
         return False
 
     our_pid = os.getpid()
@@ -1299,7 +1299,7 @@ def write_takeover_marker(target_pid: int) -> bool:
             "target_pid": target_pid,
             "target_start_time": target_start_time,
             "replacer_pid": os.getpid(),
-            "replacer_hermes_home": str(_get_process_hermes_home()),
+            "replacer_papylonation_home": str(_get_process_papylonation_home()),
             "written_at": _utc_now_iso(),
         }
         _write_json_file(_get_takeover_marker_path(), record)

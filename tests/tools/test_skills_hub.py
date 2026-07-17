@@ -2474,7 +2474,7 @@ class TestParallelSearchSourcesTimeout:
 
 
 # ---------------------------------------------------------------------------
-# _load_hermes_index — centralized index fetch (Browse-hub landing / search)
+# _load_papylonation_index — centralized index fetch (Browse-hub landing / search)
 # ---------------------------------------------------------------------------
 
 
@@ -2495,7 +2495,7 @@ class TestLoadHermesIndex:
         import tools.skills_hub as hub
 
         cache_file = tmp_path / "hermes-index.json"
-        monkeypatch.setattr(hub, "_hermes_index_cache_file", lambda: cache_file)
+        monkeypatch.setattr(hub, "_papylonation_index_cache_file", lambda: cache_file)
         return cache_file
 
     def test_fetch_does_not_request_brotli(self, monkeypatch, tmp_path):
@@ -2515,7 +2515,7 @@ class TestLoadHermesIndex:
 
         monkeypatch.setattr(hub.httpx, "get", fake_get)
 
-        data = hub._load_hermes_index()
+        data = hub._load_papylonation_index()
         assert data == {"skills": [{"name": "x"}]}
 
         accept = captured["headers"].get("Accept-Encoding", "")
@@ -2543,7 +2543,7 @@ class TestLoadHermesIndex:
 
         monkeypatch.setattr(hub.httpx, "get", fake_get)
 
-        data = hub._load_hermes_index()
+        data = hub._load_papylonation_index()
         assert data == {"skills": [{"name": "recovered"}]}
         assert len(attempts) == 2, "should retry once after a DecodingError"
         # The retry must be uncompressed (identity) so a Brotli-ignoring proxy
@@ -2569,5 +2569,5 @@ class TestLoadHermesIndex:
 
         monkeypatch.setattr(hub.httpx, "get", fake_get)
 
-        data = hub._load_hermes_index()
+        data = hub._load_papylonation_index()
         assert data == {"skills": [{"name": "stale"}]}

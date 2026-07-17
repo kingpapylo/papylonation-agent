@@ -18,7 +18,7 @@ Hermes 随仓库附带了一小组插件。它们位于 `<repo>/plugins/<name>/`
 1. **内置（Bundled）** — `<repo>/plugins/<name>/`（本页所记录的内容）
 2. **用户（User）** — `~/.hermes/plugins/<name>/`
 3. **项目（Project）** — `./.hermes/plugins/<name>/`（需要 `HERMES_ENABLE_PROJECT_PLUGINS=1`）
-4. **Pip 入口点（Entry points）** — `hermes_agent.plugins`
+4. **Pip 入口点（Entry points）** — `papylonation_agent.plugins`
 
 名称冲突时，后面的来源优先——名为 `disk-cleanup` 的用户插件会替换内置版本。
 

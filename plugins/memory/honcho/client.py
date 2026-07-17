@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-from hermes_constants import get_hermes_home
-from hermes_cli.profiles import _get_default_hermes_home
+from papylonation_constants import get_papylonation_home
+from papylonation_cli.profiles import _get_default_papylonation_home
 from plugins.plugin_utils import SingletonSlot
 from typing import Any, TYPE_CHECKING
 
@@ -58,7 +58,7 @@ def resolve_active_host() -> str:
 
     Resolution order:
       1. HERMES_HONCHO_HOST env var (explicit override)
-      2. Active profile name via profiles system -> ``hermes_<profile>``
+      2. Active profile name via profiles system -> ``papylonation_<profile>``
       3. defaultHost from the active config, but only for the default profile
       4. Fallback: ``"hermes"`` (default profile)
     """
@@ -67,7 +67,7 @@ def resolve_active_host() -> str:
         return explicit
 
     try:
-        from hermes_cli.profiles import get_active_profile_name
+        from papylonation_cli.profiles import get_active_profile_name
         profile = get_active_profile_name()
         profile_host = profile_host_key(profile)
     except Exception:
@@ -106,12 +106,12 @@ def resolve_config_path() -> Path:
 
     Returns the global path if none exist (for first-time setup writes).
     """
-    local_path = get_hermes_home() / "honcho.json"
+    local_path = get_papylonation_home() / "honcho.json"
     if local_path.exists():
         return local_path
 
     # Default profile's config — host blocks accumulate here via setup/clone
-    default_path = _get_default_hermes_home() / "honcho.json"
+    default_path = _get_default_papylonation_home() / "honcho.json"
     if default_path != local_path and default_path.exists():
         return default_path
 
@@ -866,9 +866,9 @@ def _config_yaml_timeout() -> float | None:
     """Read honcho.timeout / honcho.request_timeout from config.yaml, memoized on mtime."""
     global _config_timeout_memo
     try:
-        from hermes_constants import get_hermes_home
+        from papylonation_constants import get_papylonation_home
 
-        cfg_path = get_hermes_home() / "config.yaml"
+        cfg_path = get_papylonation_home() / "config.yaml"
         try:
             mtime_ns: int | None = cfg_path.stat().st_mtime_ns
         except OSError:
@@ -876,7 +876,7 @@ def _config_yaml_timeout() -> float | None:
         if _config_timeout_memo[0] is not None and _config_timeout_memo[0] == mtime_ns:
             return _config_timeout_memo[1]
 
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
 
         honcho_cfg = load_config().get("honcho", {})
         timeout = None
@@ -1004,9 +1004,9 @@ def get_honcho_client(config: HonchoClientConfig | None = None) -> Honcho:
         resolved_timeout = config.timeout
         if not resolved_base_url or resolved_timeout is None:
             try:
-                from hermes_cli.config import load_config
-                hermes_cfg = load_config()
-                honcho_cfg = hermes_cfg.get("honcho", {})
+                from papylonation_cli.config import load_config
+                papylonation_cfg = load_config()
+                honcho_cfg = papylonation_cfg.get("honcho", {})
                 if isinstance(honcho_cfg, dict):
                     if not resolved_base_url:
                         resolved_base_url = honcho_cfg.get("base_url", "").strip() or None

@@ -11,8 +11,8 @@ import os
 
 import yaml
 
-from hermes_cli.cli_commands_mixin import CLICommandsMixin
-from hermes_cli.config import DEFAULT_CONFIG
+from papylonation_cli.cli_commands_mixin import CLICommandsMixin
+from papylonation_cli.config import DEFAULT_CONFIG
 
 
 class _Stub(CLICommandsMixin):
@@ -38,10 +38,10 @@ def _seed_config(tmp_path, monkeypatch):
     hh.mkdir()
     (hh / "config.yaml").write_text("display:\n  show_reasoning: true\n")
     monkeypatch.setenv("HERMES_HOME", str(hh))
-    # cli captures _hermes_home at import; force it to the temp home.
+    # cli captures _papylonation_home at import; force it to the temp home.
     import cli
 
-    monkeypatch.setattr(cli, "_hermes_home", hh, raising=False)
+    monkeypatch.setattr(cli, "_papylonation_home", hh, raising=False)
     return hh
 
 

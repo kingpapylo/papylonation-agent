@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from hermes_constants import display_hermes_home
+from papylonation_constants import display_papylonation_home
 from agent.skill_preprocessing import (
     expand_inline_shell as _expand_inline_shell,
     load_skills_config as _load_skills_config,
@@ -42,7 +42,7 @@ _SKILL_MULTI_HYPHEN = re.compile(r"-{2,}")
 # (``_build_skill_message`` here, ``build_bundle_invocation_message`` in
 # agent/skill_bundles.py). They are co-located with the single-skill builder
 # on purpose, and the bundle markers are asserted against the bundle builder in
-# tests/openviking_plugin/test_openviking.py::test_skill_markers_match_hermes_scaffolding.
+# tests/openviking_plugin/test_openviking.py::test_skill_markers_match_papylonation_scaffolding.
 # ---------------------------------------------------------------------------
 _SKILL_INVOCATION_PREFIX = "[IMPORTANT: The user has invoked the "
 _SINGLE_SKILL_MARKER = "The full skill content is loaded below.]"
@@ -204,7 +204,7 @@ def _inject_skill_config(loaded_skill: dict[str, Any], parts: list[str]) -> None
         if not resolved:
             return
 
-        lines = ["", f"[Skill config (from {display_hermes_home()}/config.yaml):"]
+        lines = ["", f"[Skill config (from {display_papylonation_home()}/config.yaml):"]
         for key, value in resolved.items():
             display_val = str(value) if value else "(not set)"
             lines.append(f"  {key} = {display_val}")
@@ -329,7 +329,7 @@ def scan_skill_commands() -> Dict[str, Dict[str, Any]]:
     try:
         from tools.skills_tool import SKILLS_DIR, _parse_frontmatter, skill_matches_platform, skill_matches_environment, _get_disabled_skill_names
         from agent.skill_utils import get_external_skills_dirs, iter_skill_index_files
-        from hermes_cli.commands import resolve_command
+        from papylonation_cli.commands import resolve_command
         disabled = _get_disabled_skill_names()
         seen_names: set = set()
 

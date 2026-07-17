@@ -14,7 +14,7 @@ import threading
 from pathlib import Path
 from typing import Any, Optional
 
-from hermes_constants import get_hermes_home
+from papylonation_constants import get_papylonation_home
 from tools.environments.base import (
     BaseEnvironment,
     _ThreadedProcessHandle,
@@ -31,7 +31,7 @@ from tools.environments.file_sync import (
 
 logger = logging.getLogger(__name__)
 
-_SNAPSHOT_STORE = get_hermes_home() / "modal_snapshots.json"
+_SNAPSHOT_STORE = get_papylonation_home() / "modal_snapshots.json"
 _DIRECT_SNAPSHOT_NAMESPACE = "direct"
 
 

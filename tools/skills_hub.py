@@ -10,7 +10,7 @@ This is a library module (not an agent tool). It provides:
   - HubLockFile: Track provenance of installed hub skills
   - Hub state directory management (quarantine, audit log, taps, index cache)
 
-Used by hermes_cli/skills_hub.py for CLI commands and the /skills slash command.
+Used by papylonation_cli/skills_hub.py for CLI commands and the /skills slash command.
 """
 
 import hashlib
@@ -25,8 +25,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from hermes_constants import get_hermes_home
-from hermes_cli._subprocess_compat import windows_hide_flags
+from papylonation_constants import get_papylonation_home
+from papylonation_cli._subprocess_compat import windows_hide_flags
 from agent.skill_utils import is_excluded_skill_path
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote, urljoin, urlparse, urlsplit, urlunparse
@@ -60,13 +60,13 @@ def _override(name: str):
     return globals().get(name)
 
 
-def _hermes_home() -> Path:
-    return get_hermes_home()
+def _papylonation_home() -> Path:
+    return get_papylonation_home()
 
 
 def _skills_dir() -> Path:
     forced = _override("SKILLS_DIR")
-    return Path(forced) if forced is not None else _hermes_home() / "skills"
+    return Path(forced) if forced is not None else _papylonation_home() / "skills"
 
 
 def _hub_dir() -> Path:
@@ -100,7 +100,7 @@ def _index_cache_dir() -> Path:
 
 
 _DYNAMIC_PATH_RESOLVERS = {
-    "HERMES_HOME": _hermes_home,
+    "HERMES_HOME": _papylonation_home,
     "SKILLS_DIR": _skills_dir,
     "HUB_DIR": _hub_dir,
     "LOCK_FILE": _lock_file,
@@ -716,9 +716,9 @@ class GitHubSource(SkillSource):
         tags = []
         metadata = fm.get("metadata", {})
         if isinstance(metadata, dict):
-            hermes_meta = metadata.get("hermes", {})
-            if isinstance(hermes_meta, dict):
-                tags = hermes_meta.get("tags", [])
+            papylonation_meta = metadata.get("hermes", {})
+            if isinstance(papylonation_meta, dict):
+                tags = papylonation_meta.get("tags", [])
         if not tags:
             raw_tags = fm.get("tags", [])
             tags = raw_tags if isinstance(raw_tags, list) else []
@@ -1469,9 +1469,9 @@ class UrlSource(SkillSource):
         tags: List[str] = []
         metadata = fm.get("metadata", {})
         if isinstance(metadata, dict):
-            hermes_meta = metadata.get("hermes", {})
-            if isinstance(hermes_meta, dict):
-                raw_tags = hermes_meta.get("tags", [])
+            papylonation_meta = metadata.get("hermes", {})
+            if isinstance(papylonation_meta, dict):
+                raw_tags = papylonation_meta.get("tags", [])
                 if isinstance(raw_tags, list):
                     tags = [str(t) for t in raw_tags]
         return SkillMeta(
@@ -3169,7 +3169,7 @@ class OptionalSkillSource(SkillSource):
     OFFICIAL_REPO = "NousResearch/hermes-agent"
 
     def __init__(self):
-        from hermes_constants import get_optional_skills_dir
+        from papylonation_constants import get_optional_skills_dir
 
         self._optional_dir = get_optional_skills_dir(
             Path(__file__).parent.parent / "optional-skills"
@@ -3295,9 +3295,9 @@ class OptionalSkillSource(SkillSource):
             tags = []
             meta_block = fm.get("metadata", {})
             if isinstance(meta_block, dict):
-                hermes_meta = meta_block.get("hermes", {})
-                if isinstance(hermes_meta, dict):
-                    tags = hermes_meta.get("tags", [])
+                papylonation_meta = meta_block.get("hermes", {})
+                if isinstance(papylonation_meta, dict):
+                    tags = papylonation_meta.get("tags", [])
 
             rel_path = parent.relative_to(self._optional_dir).as_posix()
 
@@ -3776,11 +3776,11 @@ HERMES_INDEX_URL = "https://hermes-agent.nousresearch.com/docs/api/skills-index.
 HERMES_INDEX_TTL = 6 * 3600  # 6 hours
 
 
-def _hermes_index_cache_file() -> Path:
+def _papylonation_index_cache_file() -> Path:
     return _index_cache_dir() / "hermes-index.json"
 
 
-def _load_hermes_index() -> Optional[dict]:
+def _load_papylonation_index() -> Optional[dict]:
     """Fetch the centralized skills index, with local cache.
 
     The index is a JSON file hosted on the docs site, rebuilt daily by CI.
@@ -3788,12 +3788,12 @@ def _load_hermes_index() -> Optional[dict]:
     downloads within a session.
     """
     # Check local cache
-    hermes_index_cache_file = _hermes_index_cache_file()
-    if hermes_index_cache_file.exists():
+    papylonation_index_cache_file = _papylonation_index_cache_file()
+    if papylonation_index_cache_file.exists():
         try:
-            age = time.time() - hermes_index_cache_file.stat().st_mtime
+            age = time.time() - papylonation_index_cache_file.stat().st_mtime
             if age < HERMES_INDEX_TTL:
-                return json.loads(hermes_index_cache_file.read_text())
+                return json.loads(papylonation_index_cache_file.read_text())
         except (OSError, json.JSONDecodeError):
             pass
 
@@ -3846,8 +3846,8 @@ def _load_hermes_index() -> Optional[dict]:
 
     # Cache locally
     try:
-        hermes_index_cache_file.parent.mkdir(parents=True, exist_ok=True)
-        hermes_index_cache_file.write_text(json.dumps(data))
+        papylonation_index_cache_file.parent.mkdir(parents=True, exist_ok=True)
+        papylonation_index_cache_file.write_text(json.dumps(data))
     except OSError:
         pass
 
@@ -3856,10 +3856,10 @@ def _load_hermes_index() -> Optional[dict]:
 
 def _load_stale_index_cache() -> Optional[dict]:
     """Fall back to stale cache when the network fetch fails."""
-    hermes_index_cache_file = _hermes_index_cache_file()
-    if hermes_index_cache_file.exists():
+    papylonation_index_cache_file = _papylonation_index_cache_file()
+    if papylonation_index_cache_file.exists():
         try:
-            return json.loads(hermes_index_cache_file.read_text())
+            return json.loads(papylonation_index_cache_file.read_text())
         except (OSError, json.JSONDecodeError):
             pass
     return None
@@ -3887,7 +3887,7 @@ class HermesIndexSource(SkillSource):
 
     def _ensure_loaded(self) -> dict:
         if not self._loaded:
-            self._index = _load_hermes_index()
+            self._index = _load_papylonation_index()
             self._loaded = True
         return self._index or {}
 

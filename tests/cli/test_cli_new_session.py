@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hermes_state import SessionDB
+from papylonation_state import SessionDB
 from tools.todo_tool import TodoStore
 
 
@@ -256,7 +256,7 @@ def test_run_cleanup_flushes_pending_memory_manager_work(tmp_path):
     mm.flush_pending.assert_called_once_with(timeout=10)
 
 
-def test_new_command_rotates_hermes_session_id_env_and_context(tmp_path):
+def test_new_command_rotates_papylonation_session_id_env_and_context(tmp_path):
     from gateway.session_context import _VAR_MAP, get_session_env
 
     cli = _prepare_cli_with_active_session(tmp_path)

@@ -602,14 +602,14 @@ terminal:
 # ~/.hermes/.env
 TERMINAL_SSH_HOST=agent-worker.local
 TERMINAL_SSH_USER=hermes
-TERMINAL_SSH_KEY=~/.ssh/hermes_agent_key
+TERMINAL_SSH_KEY=~/.ssh/papylonation_agent_key
 ```
 
 SSH 连接详情保存在 `.env`（而非 `config.yaml`）中，以避免随 profile 导出时被检入或共享。这样可以将 gateway 的消息连接与 Agent 的命令执行分离。
 
 ## 供应链安全公告检查
 
-Hermes 内置了一个公告扫描器，用于标记活跃 venv 中与已知受损版本目录匹配的 Python 包（例如 2026 年 5 月的 `mistralai 2.4.6` 供应链投毒事件）。实现位于 `hermes_cli/security_advisories.py`。
+Hermes 内置了一个公告扫描器，用于标记活跃 venv 中与已知受损版本目录匹配的 Python 包（例如 2026 年 5 月的 `mistralai 2.4.6` 供应链投毒事件）。实现位于 `papylonation_cli/security_advisories.py`。
 
 运行方式：
 

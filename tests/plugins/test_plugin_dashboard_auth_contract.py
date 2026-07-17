@@ -5,7 +5,7 @@ plugin SDK (``window.__HERMES_PLUGIN_SDK__``): ``fetchJSON`` (JSON REST),
 ``authedFetch`` (uploads / blob downloads), and ``buildWsUrl`` /
 ``buildWsAuthParam`` (WebSockets). These handle BOTH dashboard auth modes —
 loopback (``X-Hermes-Session-Token`` header) and gated OAuth
-(``hermes_session_at`` cookie / single-use ``?ticket=``).
+(``papylonation_session_at`` cookie / single-use ``?ticket=``).
 
 Plugins that hand-roll ``fetch`` / ``WebSocket`` and read
 ``window.__HERMES_SESSION_TOKEN__`` directly send an empty token in gated mode

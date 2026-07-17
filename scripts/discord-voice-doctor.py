@@ -176,10 +176,10 @@ def check_env_vars():
 
     # Load .env
     try:
-        from hermes_cli.env_loader import load_hermes_dotenv
+        from papylonation_cli.env_loader import load_papylonation_dotenv
 
-        load_hermes_dotenv(
-            hermes_home=ENV_FILE.parent,
+        load_papylonation_dotenv(
+            papylonation_home=ENV_FILE.parent,
             project_env=PROJECT_ROOT / ".env",
         )
     except ImportError:

@@ -210,7 +210,7 @@ class TestRmtreeWritableScopeGuard:
             with pytest.raises(ValueError, match="refusing to rmtree"):
                 _rmtree_writable(Path("/"))
 
-    def test_refuses_hermes_home_itself(self, tmp_path):
+    def test_refuses_papylonation_home_itself(self, tmp_path):
         """``~/.hermes/`` itself is what the #48200 wipe destroyed."""
         from tools.skills_sync import _rmtree_writable
 
@@ -1184,14 +1184,14 @@ class TestNoBundledSkillsOptOut:
         bundled = self._setup_bundled(tmp_path)
         skills_dir = tmp_path / "user_skills"
         manifest_file = skills_dir / ".bundled_manifest"
-        hermes_home = tmp_path / "home"
-        hermes_home.mkdir()
-        (hermes_home / ".no-bundled-skills").write_text("opted out\n")
+        papylonation_home = tmp_path / "home"
+        papylonation_home.mkdir()
+        (papylonation_home / ".no-bundled-skills").write_text("opted out\n")
 
         with patch("tools.skills_sync._get_bundled_dir", return_value=bundled), \
              patch("tools.skills_sync.SKILLS_DIR", skills_dir), \
              patch("tools.skills_sync.MANIFEST_FILE", manifest_file), \
-             patch("tools.skills_sync.HERMES_HOME", hermes_home):
+             patch("tools.skills_sync.HERMES_HOME", papylonation_home):
             result = sync_skills(quiet=True)
 
         # Opt-out signalled, nothing copied, nothing written to disk.
@@ -1204,15 +1204,15 @@ class TestNoBundledSkillsOptOut:
         bundled = self._setup_bundled(tmp_path)
         skills_dir = tmp_path / "user_skills"
         manifest_file = skills_dir / ".bundled_manifest"
-        hermes_home = tmp_path / "home"
-        hermes_home.mkdir()
+        papylonation_home = tmp_path / "home"
+        papylonation_home.mkdir()
         # No marker written.
 
         with patch("tools.skills_sync._get_bundled_dir", return_value=bundled), \
              patch("tools.skills_sync._get_optional_dir", return_value=bundled.parent / "optional-skills"), \
              patch("tools.skills_sync.SKILLS_DIR", skills_dir), \
              patch("tools.skills_sync.MANIFEST_FILE", manifest_file), \
-             patch("tools.skills_sync.HERMES_HOME", hermes_home):
+             patch("tools.skills_sync.HERMES_HOME", papylonation_home):
             result = sync_skills(quiet=True)
 
         assert result.get("skipped_opt_out") is not True

@@ -600,10 +600,10 @@ class TestUserInstalledProviderDiscovery:
         """User plugins may import sibling modules with relative imports.
 
         Regression: _load_provider_from_dir() imports user plugins under the
-        synthetic ``_hermes_user_memory.<name>`` package but never registered
+        synthetic ``_papylonation_user_memory.<name>`` package but never registered
         that parent namespace in sys.modules, so any relative import inside
         the plugin raised
-        ``ModuleNotFoundError: No module named '_hermes_user_memory'``.
+        ``ModuleNotFoundError: No module named '_papylonation_user_memory'``.
         """
         from plugins.memory import load_memory_provider
         plugin_dir = tmp_path / "plugins" / "relimport"
@@ -671,7 +671,7 @@ class TestUserInstalledProviderCli:
 
     Mirror of the relative-import regression above:
     discover_plugin_cli_commands() imports the active provider's cli.py as
-    ``_hermes_user_memory.<name>.cli`` without registering the parent
+    ``_papylonation_user_memory.<name>.cli`` without registering the parent
     packages, so a cli.py with a relative import could never load.
     """
 
@@ -850,7 +850,7 @@ class TestSequentialDispatchRouting:
 
 class TestSetupFieldFiltering:
     """Test the 'when' clause and 'default_from' logic used by the
-    memory setup wizard in hermes_cli/memory_setup.py.
+    memory setup wizard in papylonation_cli/memory_setup.py.
 
     These features are generic — any memory plugin can use them in
     get_config_schema(). Currently used by the hindsight plugin.

@@ -221,7 +221,7 @@ class TestSecondaryProfileConfigHandling:
             return 2
 
         monkeypatch.setattr(
-            "hermes_cli.profiles.profiles_to_serve",
+            "papylonation_cli.profiles.profiles_to_serve",
             lambda multiplex: [
                 ("default", Path("/tmp/default")),
                 ("bad", Path("/tmp/bad")),
@@ -229,7 +229,7 @@ class TestSecondaryProfileConfigHandling:
             ],
         )
         monkeypatch.setattr(
-            "hermes_cli.profiles.get_active_profile_name",
+            "papylonation_cli.profiles.get_active_profile_name",
             lambda: "default",
         )
         monkeypatch.setattr(runner, "_start_one_profile_adapters", fake_start_one)
@@ -263,14 +263,14 @@ class TestSecondaryProfileConfigHandling:
             )
 
         monkeypatch.setattr(
-            "hermes_cli.profiles.profiles_to_serve",
+            "papylonation_cli.profiles.profiles_to_serve",
             lambda multiplex: [
                 ("default", Path("/tmp/default")),
                 ("unsafe", Path("/tmp/unsafe")),
             ],
         )
         monkeypatch.setattr(
-            "hermes_cli.profiles.get_active_profile_name",
+            "papylonation_cli.profiles.get_active_profile_name",
             lambda: "default",
         )
         monkeypatch.setattr(runner, "_start_one_profile_adapters", fake_start_one)

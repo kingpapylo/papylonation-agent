@@ -14,9 +14,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hermes_cli import kanban as kanban_cli
-from hermes_cli import kanban_db as kb
-from hermes_cli import kanban_specify as spec
+from papylonation_cli import kanban as kanban_cli
+from papylonation_cli import kanban_db as kb
+from papylonation_cli import kanban_specify as spec
 
 
 @pytest.fixture

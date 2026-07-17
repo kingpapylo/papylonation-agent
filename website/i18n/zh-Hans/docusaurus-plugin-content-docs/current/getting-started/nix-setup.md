@@ -624,7 +624,7 @@ services.hermes-agent.extraPlugins = [
 
 ### 入口点插件（`extraPythonPackages`）
 
-对于通过 `[project.entry-points."hermes_agent.plugins"]` 注册的 pip 打包插件（例如 [rtk-hermes](https://github.com/ogallotti/rtk-hermes)）：
+对于通过 `[project.entry-points."papylonation_agent.plugins"]` 注册的 pip 打包插件（例如 [rtk-hermes](https://github.com/ogallotti/rtk-hermes)）：
 
 ```nix
 services.hermes-agent.extraPythonPackages = [

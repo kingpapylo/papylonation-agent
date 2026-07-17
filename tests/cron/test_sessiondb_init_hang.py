@@ -32,7 +32,7 @@ from cron.scheduler import run_job
 
 
 def _hanging_session_db(never_set: threading.Event):
-    """Stand-in for hermes_state.SessionDB() that blocks until released —
+    """Stand-in for papylonation_state.SessionDB() that blocks until released —
     like the real incident's wedged sqlite3.connect, but bounded so the test
     process can still exit cleanly once the assertions are done."""
     never_set.wait(timeout=30)
@@ -47,13 +47,13 @@ class TestSessionDbInitTimeout:
         job = {"id": "wedged-sessiondb", "name": "test", "prompt": "hello"}
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._papylonation_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("papylonation_cli.env_loader.load_papylonation_dotenv"), \
+                 patch("papylonation_cli.env_loader.reset_secret_source_cache"), \
+                 patch("papylonation_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "papylonation_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",
@@ -88,13 +88,13 @@ class TestSessionDbInitTimeout:
         fake_db = MagicMock()
         job = {"id": "bad-timeout-env", "name": "test", "prompt": "hello"}
 
-        with patch("cron.scheduler._hermes_home", tmp_path), \
+        with patch("cron.scheduler._papylonation_home", tmp_path), \
              patch("cron.scheduler._resolve_origin", return_value=None), \
-             patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-             patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-             patch("hermes_state.SessionDB", return_value=fake_db), \
+             patch("papylonation_cli.env_loader.load_papylonation_dotenv"), \
+             patch("papylonation_cli.env_loader.reset_secret_source_cache"), \
+             patch("papylonation_state.SessionDB", return_value=fake_db), \
              patch(
-                 "hermes_cli.runtime_provider.resolve_runtime_provider",
+                 "papylonation_cli.runtime_provider.resolve_runtime_provider",
                  return_value={
                      "api_key": "test-key",
                      "base_url": "https://example.invalid/v1",
@@ -135,13 +135,13 @@ class TestSessionDbInitTimeout:
         job = {"id": "config-timeout", "name": "test", "prompt": "hello"}
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._papylonation_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("papylonation_cli.env_loader.load_papylonation_dotenv"), \
+                 patch("papylonation_cli.env_loader.reset_secret_source_cache"), \
+                 patch("papylonation_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "papylonation_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",
@@ -190,13 +190,13 @@ class TestDispatchGuardReleasedAfterHang:
         }
 
         try:
-            with patch("cron.scheduler._hermes_home", tmp_path), \
+            with patch("cron.scheduler._papylonation_home", tmp_path), \
                  patch("cron.scheduler._resolve_origin", return_value=None), \
-                 patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                 patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                 patch("hermes_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
+                 patch("papylonation_cli.env_loader.load_papylonation_dotenv"), \
+                 patch("papylonation_cli.env_loader.reset_secret_source_cache"), \
+                 patch("papylonation_state.SessionDB", side_effect=lambda: _hanging_session_db(never_set)), \
                  patch(
-                     "hermes_cli.runtime_provider.resolve_runtime_provider",
+                     "papylonation_cli.runtime_provider.resolve_runtime_provider",
                      return_value={
                          "api_key": "test-key",
                          "base_url": "https://example.invalid/v1",

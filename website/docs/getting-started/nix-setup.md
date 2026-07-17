@@ -644,7 +644,7 @@ Plugins are symlinked into `$HERMES_HOME/plugins/` at activation time. Hermes di
 
 ### Entry-Point Plugins (`extraPythonPackages`)
 
-For pip-packaged plugins that register via `[project.entry-points."hermes_agent.plugins"]` (e.g., [rtk-hermes](https://github.com/ogallotti/rtk-hermes)):
+For pip-packaged plugins that register via `[project.entry-points."papylonation_agent.plugins"]` (e.g., [rtk-hermes](https://github.com/ogallotti/rtk-hermes)):
 
 ```nix
 services.hermes-agent.extraPythonPackages = [

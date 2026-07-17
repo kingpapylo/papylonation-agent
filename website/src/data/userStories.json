@@ -662,7 +662,7 @@
   {
     "source": "reddit",
     "author": "u/Birdinhandandbush",
-    "url": "https://www.reddit.com/r/hermesagent/comments/1snfnq9/yes_hermes_and_qwen354b_is_all_i_need_details/",
+    "url": "https://www.reddit.com/r/hermesagent/comments/1snfnq9/yes_papylonation_and_qwen354b_is_all_i_need_details/",
     "date": "2026-04-16",
     "category": "personal-assistant",
     "headline": "Hermes + Qwen3.5:4b on a 5060Ti is all I need",
@@ -1135,7 +1135,7 @@
   {
     "source": "reddit",
     "author": "u/ninjapapi",
-    "url": "https://www.reddit.com/r/SideProject/comments/1t6356h/5_things_hermes_does_as_an_ai_agent_that_chatgpt/",
+    "url": "https://www.reddit.com/r/SideProject/comments/1t6356h/5_things_papylonation_does_as_an_ai_agent_that_chatgpt/",
     "date": "2026-05-07",
     "category": "personal-assistant",
     "headline": "5 things Hermes does that ChatGPT will never do",
@@ -1201,7 +1201,7 @@
   {
     "source": "reddit",
     "author": "u/itsdodobitch",
-    "url": "https://www.reddit.com/r/hermesagent/comments/1t29ogw/one_month_with_hermes_agent_what_i_wish_i_knew/",
+    "url": "https://www.reddit.com/r/hermesagent/comments/1t29ogw/one_month_with_papylonation_agent_what_i_wish_i_knew/",
     "date": "2026-05-03",
     "category": "meta",
     "headline": "One month with Hermes: don't build the whole machine on day one",
@@ -1366,7 +1366,7 @@
   {
     "source": "reddit",
     "author": "u/Delicious_Ease2595",
-    "url": "https://www.reddit.com/r/openclaw/comments/1slqt5h/is_hermes_agent_a_new_hype_or_is_it_genuinely/",
+    "url": "https://www.reddit.com/r/openclaw/comments/1slqt5h/is_papylonation_agent_a_new_hype_or_is_it_genuinely/",
     "date": "2026-04-15",
     "category": "dev-workflow",
     "headline": "Side-by-side: Hermes more stable, troubleshoots OpenClaw",
@@ -1773,7 +1773,7 @@
   {
     "source": "reddit",
     "author": "u/yellow-green-bird",
-    "url": "https://www.reddit.com/r/openclaw/comments/1slqt5h/is_hermes_agent_a_new_hype_or_is_it_genuinely/",
+    "url": "https://www.reddit.com/r/openclaw/comments/1slqt5h/is_papylonation_agent_a_new_hype_or_is_it_genuinely/",
     "date": "2026-04-15",
     "category": "dev-workflow",
     "headline": "Every OpenClaw update breaks something — Hermes just runs",
@@ -1795,7 +1795,7 @@
   {
     "source": "reddit",
     "author": "u/hackrepair",
-    "url": "https://www.reddit.com/r/hermesagent/comments/1smgo1i/my_hermes_journey/",
+    "url": "https://www.reddit.com/r/hermesagent/comments/1smgo1i/my_papylonation_journey/",
     "date": "2026-04-15",
     "category": "cost-optimization",
     "headline": "My Hermes Journey: smart-routing tiers that save 10 hours and $40",
@@ -1818,7 +1818,7 @@
     "id": "reddit-windows-wrapper",
     "source": "reddit",
     "author": "r/SideProject",
-    "url": "https://www.reddit.com/r/SideProject/comments/1sdaojm/i_took_the_nousresearch_hermes_agent_and_built_a/",
+    "url": "https://www.reddit.com/r/SideProject/comments/1sdaojm/i_took_the_nousresearch_papylonation_agent_and_built_a/",
     "date": "2026",
     "category": "meta",
     "headline": "Native Windows app wrapper for Hermes",
@@ -1960,7 +1960,7 @@
   {
     "source": "reddit",
     "author": "u/patbhakta",
-    "url": "https://www.reddit.com/r/Rag/comments/1sgmvxh/anyone_here_tried_hermes_agent_whats_your/",
+    "url": "https://www.reddit.com/r/Rag/comments/1sgmvxh/anyone_here_tried_papylonation_agent_whats_your/",
     "date": "2026-04-09",
     "category": "personal-assistant",
     "headline": "Hermes vs OpenClaw: memory lets me jump between projects",
@@ -2192,7 +2192,7 @@
     "id": "reddit-hermify",
     "source": "reddit",
     "author": "r/vibecoding",
-    "url": "https://www.reddit.com/r/vibecoding/comments/1slhhj1/i_took_the_nousresearch_hermes_agent_and_built_a/",
+    "url": "https://www.reddit.com/r/vibecoding/comments/1slhhj1/i_took_the_nousresearch_papylonation_agent_and_built_a/",
     "date": "2026",
     "category": "meta",
     "headline": "Hermify: managed hosting for Hermes",
@@ -2460,7 +2460,7 @@
     "date": "",
     "category": "creative",
     "headline": "I built a fully autonomous 'Dreamer' agent that just wanders and thinks",
-    "quote": "I built a completely autonomous 'Dreamer' agent on Hermes. I wanted to try something different: a fully separate, unsupervised agent that has no tasks and no agenda. I gave it its own folder (~/hermes_dreamer/), complete autonomy, and told it to just wander and think freely whenever it feels like it. It started doing 'walks' — free-thinking...",
+    "quote": "I built a completely autonomous 'Dreamer' agent on Hermes. I wanted to try something different: a fully separate, unsupervised agent that has no tasks and no agenda. I gave it its own folder (~/papylonation_dreamer/), complete autonomy, and told it to just wander and think freely whenever it feels like it. It started doing 'walks' — free-thinking...",
     "size": "lg"
   },
   {

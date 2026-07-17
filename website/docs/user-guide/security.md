@@ -265,7 +265,7 @@ To allow both a workspace and Hermes home:
 export HERMES_WRITE_SAFE_ROOT=/path/to/project:/home/you/.hermes
 ```
 
-Unset the variable to restore unrestricted writes (subject to the protected-path denylist). Full reference: [HERMES_WRITE_SAFE_ROOT](../reference/environment-variables.md#hermes_write_safe_root).
+Unset the variable to restore unrestricted writes (subject to the protected-path denylist). Full reference: [HERMES_WRITE_SAFE_ROOT](../reference/environment-variables.md#papylonation_write_safe_root).
 
 ### Cron and other Hermes state
 
@@ -704,14 +704,14 @@ terminal:
 # ~/.hermes/.env
 TERMINAL_SSH_HOST=agent-worker.local
 TERMINAL_SSH_USER=hermes
-TERMINAL_SSH_KEY=~/.ssh/hermes_agent_key
+TERMINAL_SSH_KEY=~/.ssh/papylonation_agent_key
 ```
 
 The SSH connection details live in `.env` (not `config.yaml`) so they aren't checked in or shared along with profile exports. This keeps the gateway's messaging connections separate from the agent's command execution.
 
 ## Supply-chain advisory checking
 
-Hermes ships with a built-in advisory scanner that flags Python packages in the active venv that match a curated catalog of known-compromised versions (supply-chain worms like the May 2026 `mistralai 2.4.6` poisoning). Implementation lives in `hermes_cli/security_advisories.py`.
+Hermes ships with a built-in advisory scanner that flags Python packages in the active venv that match a curated catalog of known-compromised versions (supply-chain worms like the May 2026 `mistralai 2.4.6` poisoning). Implementation lives in `papylonation_cli/security_advisories.py`.
 
 How it runs:
 

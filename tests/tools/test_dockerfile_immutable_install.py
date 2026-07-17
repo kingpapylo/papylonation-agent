@@ -12,7 +12,7 @@ def _dockerfile_text() -> str:
     return DOCKERFILE.read_text()
 
 
-def test_dockerfile_makes_opt_hermes_readonly_for_hermes_user() -> None:
+def test_dockerfile_makes_opt_papylonation_readonly_for_papylonation_user() -> None:
     text = _dockerfile_text()
 
     # --chmod on the source COPY bakes read-only perms at copy time instead

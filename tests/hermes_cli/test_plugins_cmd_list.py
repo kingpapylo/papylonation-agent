@@ -2,7 +2,7 @@ import argparse
 import json
 from types import SimpleNamespace
 
-from hermes_cli import plugins_cmd
+from papylonation_cli import plugins_cmd
 
 
 def _args(**kwargs):
@@ -102,13 +102,13 @@ def test_discover_all_plugins_includes_entrypoint_plugins(monkeypatch, tmp_path)
     entry_point = SimpleNamespace(
         name="wiki",
         value="adapters.hermes.cli_plugin",
-        group="hermes_agent.plugins",
+        group="papylonation_agent.plugins",
         dist=dist,
     )
 
     monkeypatch.setattr(plugins_cmd, "_plugins_dir", lambda: user_dir)
     monkeypatch.setattr(
-        "hermes_cli.plugins.get_bundled_plugins_dir",
+        "papylonation_cli.plugins.get_bundled_plugins_dir",
         lambda: bundled_dir,
     )
     monkeypatch.setattr(

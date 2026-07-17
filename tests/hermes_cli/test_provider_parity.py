@@ -13,9 +13,9 @@ can never silently drift again when a provider plugin is added.
 
 from fastapi.testclient import TestClient
 
-from hermes_cli.models import CANONICAL_PROVIDERS
-from hermes_cli.provider_catalog import provider_catalog
-from hermes_cli.web_server import _SESSION_TOKEN, app
+from papylonation_cli.models import CANONICAL_PROVIDERS
+from papylonation_cli.provider_catalog import provider_catalog
+from papylonation_cli.web_server import _SESSION_TOKEN, app
 
 client = TestClient(app)
 HEADERS = {"X-Hermes-Session-Token": _SESSION_TOKEN}
@@ -56,7 +56,7 @@ def _accounts_tab_providers() -> set[str]:
     return {p["id"] for p in data["providers"]}
 
 
-def test_every_hermes_model_provider_is_configurable_in_desktop():
+def test_every_papylonation_model_provider_is_configurable_in_desktop():
     """PARITY CONTRACT: GUI (keys ∪ accounts) ⊇ `hermes model` universe."""
     gui = _keys_tab_providers() | _accounts_tab_providers()
     missing = [

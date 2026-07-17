@@ -38,7 +38,7 @@ def _make_task(kb, *, assignee: str = "w"):
 
 
 def _capture_spawn_env(kb, monkeypatch, workspace: str) -> dict:
-    monkeypatch.setattr(kb, "_resolve_hermes_argv", lambda: ["hermes"])
+    monkeypatch.setattr(kb, "_resolve_papylonation_argv", lambda: ["hermes"])
 
     captured: dict = {}
 
@@ -64,7 +64,7 @@ def test_terminal_cwd_pinned_to_workspace(monkeypatch, tmp_path):
     root.joinpath("config.yaml").write_text("toolsets:\n  - kanban\n", encoding="utf-8")
     monkeypatch.setenv("HERMES_HOME", str(root))
 
-    from hermes_cli import kanban_db as kb
+    from papylonation_cli import kanban_db as kb
 
     workspace = tmp_path / "ws"
     workspace.mkdir()
@@ -91,7 +91,7 @@ def test_terminal_cwd_not_pinned_for_nonexistent_workspace(monkeypatch, tmp_path
     monkeypatch.setenv("HERMES_HOME", str(root))
     monkeypatch.setenv("TERMINAL_CWD", "/pre/existing/anchor")
 
-    from hermes_cli import kanban_db as kb
+    from papylonation_cli import kanban_db as kb
 
     missing = tmp_path / "does-not-exist"
 

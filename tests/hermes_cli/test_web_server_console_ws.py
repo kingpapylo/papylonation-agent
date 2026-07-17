@@ -9,11 +9,11 @@ import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from hermes_cli import web_server
+from papylonation_cli import web_server
 
 
 @pytest.fixture
-def console_client(monkeypatch, _isolate_hermes_home):
+def console_client(monkeypatch, _isolate_papylonation_home):
     previous_auth_required = getattr(web_server.app.state, "auth_required", None)
     previous_bound_host = getattr(web_server.app.state, "bound_host", None)
     web_server.app.state.auth_required = False
@@ -85,7 +85,7 @@ def test_console_ws_runs_read_only_command(console_client):
 
 
 def test_console_ws_confirmed_command_executes_after_confirmation(console_client):
-    from hermes_cli.config import load_config
+    from papylonation_cli.config import load_config
 
     with console_client.websocket_connect(_url()) as conn:
         assert conn.receive_json()["type"] == "ready"
@@ -102,7 +102,7 @@ def test_console_ws_confirmed_command_executes_after_confirmation(console_client
 
 
 def test_console_ws_cancel_returns_to_prompt(console_client, monkeypatch):
-    from hermes_cli.console_engine import ConsoleResult, HermesConsoleEngine
+    from papylonation_cli.console_engine import ConsoleResult, HermesConsoleEngine
 
     def slow_execute(self, line: str, *, confirmed: bool = False):
         time.sleep(0.5)

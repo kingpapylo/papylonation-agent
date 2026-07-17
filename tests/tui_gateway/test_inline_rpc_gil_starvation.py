@@ -35,10 +35,10 @@ def _restore_stdout():
 @pytest.fixture()
 def server():
     with patch.dict("sys.modules", {
-        "hermes_constants": MagicMock(get_hermes_home=MagicMock(return_value="/tmp/hermes_test")),
-        "hermes_cli.env_loader": MagicMock(),
-        "hermes_cli.banner": MagicMock(),
-        "hermes_state": MagicMock(),
+        "papylonation_constants": MagicMock(get_papylonation_home=MagicMock(return_value="/tmp/papylonation_test")),
+        "papylonation_cli.env_loader": MagicMock(),
+        "papylonation_cli.banner": MagicMock(),
+        "papylonation_state": MagicMock(),
     }):
         import importlib
         mod = importlib.import_module("tui_gateway.server")

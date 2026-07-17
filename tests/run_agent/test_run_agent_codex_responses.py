@@ -1142,11 +1142,11 @@ def test_copilot_final_preflight_sanitizes_both_middleware_layers(monkeypatch):
         return _codex_message_response("OK")
 
     monkeypatch.setattr(
-        "hermes_cli.middleware.apply_llm_request_middleware",
+        "papylonation_cli.middleware.apply_llm_request_middleware",
         _request_middleware,
     )
     monkeypatch.setattr(
-        "hermes_cli.middleware.run_llm_execution_middleware",
+        "papylonation_cli.middleware.run_llm_execution_middleware",
         _execution_middleware,
     )
     monkeypatch.setattr(agent, "_interruptible_api_call", _capture_api_call)
@@ -1368,7 +1368,7 @@ def test_try_refresh_codex_client_credentials_handles_xai_oauth(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_xai_oauth_runtime_credentials",
+        "papylonation_cli.auth.resolve_xai_oauth_runtime_credentials",
         _fake_resolve,
     )
     monkeypatch.setattr(run_agent, "OpenAI", _fake_openai)
@@ -1415,7 +1415,7 @@ def test_try_refresh_codex_client_credentials_skips_xai_oauth_when_singleton_dif
         }
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_xai_oauth_runtime_credentials",
+        "papylonation_cli.auth.resolve_xai_oauth_runtime_credentials",
         _fake_resolve,
     )
 
@@ -1490,7 +1490,7 @@ def test_try_refresh_codex_client_credentials_rebuilds_client(monkeypatch):
         }
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_codex_runtime_credentials",
+        "papylonation_cli.auth.resolve_codex_runtime_credentials",
         _fake_resolve,
     )
     monkeypatch.setattr(run_agent, "OpenAI", _fake_openai)
@@ -1522,7 +1522,7 @@ def test_try_refresh_copilot_client_credentials_rebuilds_client(monkeypatch):
         return _RebuiltClient()
 
     monkeypatch.setattr(
-        "hermes_cli.copilot_auth.resolve_copilot_token",
+        "papylonation_cli.copilot_auth.resolve_copilot_token",
         lambda: ("gho_new_token", "GH_TOKEN"),
     )
     monkeypatch.setattr(run_agent, "OpenAI", _fake_openai)
@@ -1550,7 +1550,7 @@ def test_try_refresh_copilot_client_credentials_rebuilds_even_if_token_unchanged
         return _RebuiltClient()
 
     monkeypatch.setattr(
-        "hermes_cli.copilot_auth.resolve_copilot_token",
+        "papylonation_cli.copilot_auth.resolve_copilot_token",
         lambda: ("gh-token", "gh auth token"),
     )
     monkeypatch.setattr(run_agent, "OpenAI", _fake_openai)
@@ -1911,7 +1911,7 @@ def test_mid_turn_compaction_does_not_double_persist_in_place_rows(monkeypatch, 
     context and retriggering compression. This guards that regression with a
     REAL SessionDB and the REAL archive_and_compact path (no persist stubs).
     """
-    from hermes_state import SessionDB
+    from papylonation_state import SessionDB
 
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     agent = _build_agent(monkeypatch)

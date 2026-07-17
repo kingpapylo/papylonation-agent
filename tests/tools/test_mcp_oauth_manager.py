@@ -13,14 +13,14 @@ import pytest
 
 
 def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypatch):
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from papylonation_constants import reset_papylonation_home_override, set_papylonation_home_override
     from tools.mcp_oauth import HermesTokenStorage
     from tools.mcp_oauth_manager import MCPOAuthManager
 
     profile_a = tmp_path / "profile-a"
     profile_b = tmp_path / "profile-b"
     for home, access_token in ((profile_a, "TOKEN_A"), (profile_b, "TOKEN_B")):
-        token = set_hermes_home_override(home)
+        token = set_papylonation_home_override(home)
         try:
             storage = HermesTokenStorage("shared")
             storage._tokens_path().parent.mkdir(parents=True, exist_ok=True)
@@ -29,18 +29,18 @@ def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypat
                 % access_token
             )
         finally:
-            reset_hermes_home_override(token)
+            reset_papylonation_home_override(token)
 
     manager = MCPOAuthManager()
     providers = []
     for home in (profile_a, profile_b):
-        token = set_hermes_home_override(home)
+        token = set_papylonation_home_override(home)
         try:
             provider = manager.get_or_build_provider("shared", "https://mcp.example/mcp", {})
             asyncio.run(provider._initialize())
             providers.append(provider)
         finally:
-            reset_hermes_home_override(token)
+            reset_papylonation_home_override(token)
 
     assert providers[0] is not providers[1]
     assert providers[0].context.current_tokens.access_token == "TOKEN_A"
@@ -48,7 +48,7 @@ def test_manager_isolates_same_named_servers_by_profile_home(tmp_path, monkeypat
 
 
 def test_manager_explicit_home_removes_only_that_profiles_tokens(tmp_path):
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from papylonation_constants import reset_papylonation_home_override, set_papylonation_home_override
     from tools.mcp_oauth import HermesTokenStorage
     from tools.mcp_oauth_manager import MCPOAuthManager
 
@@ -56,20 +56,20 @@ def test_manager_explicit_home_removes_only_that_profiles_tokens(tmp_path):
     profile_b = tmp_path / "profile-b"
     paths = []
     for home in (profile_a, profile_b):
-        token = set_hermes_home_override(home)
+        token = set_papylonation_home_override(home)
         try:
             storage = HermesTokenStorage("shared")
             storage._tokens_path().parent.mkdir(parents=True, exist_ok=True)
             storage._tokens_path().write_text('{"access_token":"x","token_type":"Bearer"}')
             paths.append(storage._tokens_path())
         finally:
-            reset_hermes_home_override(token)
+            reset_papylonation_home_override(token)
 
-    token = set_hermes_home_override(profile_a)
+    token = set_papylonation_home_override(profile_a)
     try:
-        MCPOAuthManager().remove("shared", hermes_home=profile_b)
+        MCPOAuthManager().remove("shared", papylonation_home=profile_b)
     finally:
-        reset_hermes_home_override(token)
+        reset_papylonation_home_override(token)
 
     assert paths[0].exists()
     assert not paths[1].exists()
@@ -175,7 +175,7 @@ def test_manager_remove_evicts_cache(tmp_path, monkeypatch):
     assert p1 is not p2
 
 
-def test_hermes_provider_subclass_exists():
+def test_papylonation_provider_subclass_exists():
     """HermesMCPOAuthProvider is defined and subclasses OAuthClientProvider."""
     from tools.mcp_oauth_manager import _HERMES_PROVIDER_CLS
     from mcp.client.auth.oauth2 import OAuthClientProvider
@@ -330,7 +330,7 @@ async def test_handle_401_dedup_survives_even_if_task_reference_dropped(tmp_path
     assert len(mgr._inflight_tasks) == 0
 
 
-def test_manager_builds_hermes_provider_subclass(tmp_path, monkeypatch):
+def test_manager_builds_papylonation_provider_subclass(tmp_path, monkeypatch):
     """get_or_build_provider returns HermesMCPOAuthProvider, not plain OAuthClientProvider."""
     from tools.mcp_oauth_manager import (
         MCPOAuthManager, _HERMES_PROVIDER_CLS, reset_manager_for_tests,
@@ -344,7 +344,7 @@ def test_manager_builds_hermes_provider_subclass(tmp_path, monkeypatch):
 
     assert _HERMES_PROVIDER_CLS is not None
     assert isinstance(provider, _HERMES_PROVIDER_CLS)
-    assert provider._hermes_server_name == "srv"
+    assert provider._papylonation_server_name == "srv"
 
 
 def test_manager_fails_fast_noninteractive_without_cached_tokens(tmp_path, monkeypatch):

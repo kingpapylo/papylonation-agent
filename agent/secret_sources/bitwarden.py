@@ -6,7 +6,7 @@ so they don't have to live in plaintext in ``~/.hermes/.env``.
 Design summary
 --------------
 
-* The ``bws`` binary is auto-installed into ``<hermes_home>/bin/bws`` on
+* The ``bws`` binary is auto-installed into ``<papylonation_home>/bin/bws`` on
   first use.  Hermes pins one version (``_BWS_VERSION``) and downloads
   the matching asset from the official GitHub Releases page, verifying
   the SHA-256 against the release's published checksum file.
@@ -74,7 +74,7 @@ _BWS_CHECKSUM_NAME = f"bws-sha256-checksums-{_BWS_VERSION}.txt"
 _BWS_DOWNLOAD_TIMEOUT = 60
 _BWS_RUN_TIMEOUT = 30
 
-# In-process cache so repeated load_hermes_dotenv() calls (CLI startup,
+# In-process cache so repeated load_papylonation_dotenv() calls (CLI startup,
 # gateway hot-reload, test suites) don't re-fetch from BSM.
 _CacheKey = Tuple[str, str, str]  # (access_token_fingerprint, project_id, server_url)
 _CACHE: Dict[_CacheKey, _CachedFetch] = {}
@@ -85,7 +85,7 @@ _CACHE: Dict[_CacheKey, _CachedFetch] = {}
 # fetches WITHIN one process; this saves repeated fetches ACROSS processes.
 #
 # Layout: one JSON object per cache key, written atomically with mode 0600 in
-# <hermes_home>/cache/bws_cache.json. The file holds only the secret VALUES,
+# <papylonation_home>/cache/bws_cache.json. The file holds only the secret VALUES,
 # never the access token. It's plaintext-equivalent to ~/.hermes/.env (which
 # we already accept) but kept out of the .env file so users editing it won't
 # accidentally commit BSM-sourced secrets. The atomic-write/0600/TTL mechanics
@@ -105,7 +105,7 @@ _DISK_CACHE: DiskCache = DiskCache(
 
 
 def _disk_cache_path(home_path: Optional[Path] = None) -> Path:
-    """Return the disk cache path under hermes_home/cache/.
+    """Return the disk cache path under papylonation_home/cache/.
 
     Thin wrapper over the shared DiskCache, kept for tests and any direct
     callers; falls back to `$HERMES_HOME` / `~/.hermes` when home is None.
@@ -118,24 +118,24 @@ def _disk_cache_path(home_path: Optional[Path] = None) -> Path:
 # ---------------------------------------------------------------------------
 
 
-def _hermes_bin_dir() -> Path:
+def _papylonation_bin_dir() -> Path:
     """Where Hermes stores its managed binaries.  Profile-aware."""
-    from hermes_constants import get_hermes_home
+    from papylonation_constants import get_papylonation_home
 
-    return get_hermes_home() / "bin"
+    return get_papylonation_home() / "bin"
 
 
 def find_bws(*, install_if_missing: bool = False) -> Optional[Path]:
     """Return a path to a usable ``bws`` binary, or None.
 
     Resolution order:
-      1. ``<hermes_home>/bin/bws``  (our managed copy — preferred)
+      1. ``<papylonation_home>/bin/bws``  (our managed copy — preferred)
       2. ``shutil.which("bws")``    (system PATH)
 
     When ``install_if_missing`` is True and neither resolves, this calls
     :func:`install_bws` to download and verify the pinned version.
     """
-    managed = _hermes_bin_dir() / _platform_binary_name()
+    managed = _papylonation_bin_dir() / _platform_binary_name()
     if managed.exists() and os.access(managed, os.X_OK):
         return managed
 
@@ -207,7 +207,7 @@ def install_bws(*, force: bool = False) -> Path:
     path catch these; the user-facing ``hermes secrets bitwarden setup``
     surface lets them propagate so the wizard can show a clear error.
     """
-    bin_dir = _hermes_bin_dir()
+    bin_dir = _papylonation_bin_dir()
     bin_dir.mkdir(parents=True, exist_ok=True)
     target = bin_dir / _platform_binary_name()
 
@@ -370,7 +370,7 @@ def fetch_bitwarden_secrets(
 
     Caching is a two-layer LRU: an in-process dict (for hot-reload paths
     inside one process) and a disk-persisted JSON file under
-    ``<hermes_home>/cache/bws_cache.json`` (for back-to-back CLI invocations).
+    ``<papylonation_home>/cache/bws_cache.json`` (for back-to-back CLI invocations).
     Both share the same TTL.  Pass ``home_path`` so disk cache lookups find
     the right directory in tests / non-standard installs; otherwise we fall
     back to ``$HERMES_HOME`` / ``~/.hermes``.
@@ -488,7 +488,7 @@ def _run_bws_list(
 
 
 # ---------------------------------------------------------------------------
-# Public entry point — called from hermes_cli.env_loader
+# Public entry point — called from papylonation_cli.env_loader
 # ---------------------------------------------------------------------------
 
 
@@ -505,7 +505,7 @@ def apply_bitwarden_secrets(
 ) -> FetchResult:
     """Pull secrets from BSM and set them on ``os.environ``.
 
-    This is the function ``load_hermes_dotenv()`` calls after the .env
+    This is the function ``load_papylonation_dotenv()`` calls after the .env
     files have loaded.  It is intentionally defensive — any failure
     returns a :class:`FetchResult` with ``error`` set; it never raises.
 

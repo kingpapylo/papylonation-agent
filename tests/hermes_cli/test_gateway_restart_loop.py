@@ -12,7 +12,7 @@ from argparse import Namespace
 
 import pytest
 
-from hermes_cli.cron import (
+from papylonation_cli.cron import (
     _contains_gateway_lifecycle_command,
     cron_command,
 )
@@ -32,7 +32,7 @@ class TestGatewayLifecyclePattern:
         "Hermez Gateway Restart".lower().replace("z", "s"),  # case handled
         "HERMES GATEWAY RESTART",           # uppercase
     ])
-    def test_hermes_gateway_commands(self, text):
+    def test_papylonation_gateway_commands(self, text):
         assert _contains_gateway_lifecycle_command(text), f"Should match: {text!r}"
 
     @pytest.mark.parametrize("text", [
@@ -98,7 +98,7 @@ class TestCronCreateLifecycleBlock:
         monkeypatch.setattr("cron.jobs.JOBS_FILE", tmp_path / "cron" / "jobs.json")
         monkeypatch.setattr("cron.jobs.OUTPUT_DIR", tmp_path / "cron" / "output")
 
-    def test_block_hermes_gateway_restart(self, capsys):
+    def test_block_papylonation_gateway_restart(self, capsys):
         args = Namespace(
             cron_command="create",
             schedule="30m",
@@ -141,7 +141,7 @@ class TestCronCreateLifecycleBlock:
 
     def test_block_script_with_lifecycle_command(self, tmp_path, capsys, monkeypatch):
         # A no_agent job whose script IS the job (the issue's real abuse path:
-        # restart_hermes_gateway_once.sh). The script must live under
+        # restart_papylonation_gateway_once.sh). The script must live under
         # HERMES_HOME/scripts so the scheduler — and the guard — resolve it.
         monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
         scripts_dir = tmp_path / ".hermes" / "scripts"
@@ -221,7 +221,7 @@ class TestGatewaySelfTargetingGuard:
 
     def test_stop_refuses_inside_gateway(self, monkeypatch):
         monkeypatch.setenv("_HERMES_GATEWAY", "1")
-        from hermes_cli.gateway import gateway_command
+        from papylonation_cli.gateway import gateway_command
         args = Namespace(gateway_command="stop", all=False, system=False)
         with pytest.raises(SystemExit) as exc_info:
             gateway_command(args)
@@ -229,7 +229,7 @@ class TestGatewaySelfTargetingGuard:
 
     def test_restart_refuses_inside_gateway(self, monkeypatch):
         monkeypatch.setenv("_HERMES_GATEWAY", "1")
-        from hermes_cli.gateway import gateway_command
+        from papylonation_cli.gateway import gateway_command
         args = Namespace(gateway_command="restart", all=False, system=False)
         with pytest.raises(SystemExit) as exc_info:
             gateway_command(args)
@@ -241,7 +241,7 @@ class TestGatewaySelfTargetingGuard:
         # real signal delivery, which would trip the live-system guard) by
         # short-circuiting the first downstream call with a sentinel.
         monkeypatch.delenv("_HERMES_GATEWAY", raising=False)
-        import hermes_cli.gateway as gw
+        import papylonation_cli.gateway as gw
 
         class _Reached(Exception):
             pass
@@ -260,7 +260,7 @@ class TestGatewaySelfTargetingGuard:
         # unset. The first thing restart does after the guard is the s6
         # dispatch check — sentinel it so we never reach real signal delivery.
         monkeypatch.delenv("_HERMES_GATEWAY", raising=False)
-        import hermes_cli.gateway as gw
+        import papylonation_cli.gateway as gw
 
         class _Reached(Exception):
             pass
@@ -450,7 +450,7 @@ class TestLifecycleGuardModule:
 class TestCreateJobBlocksLifecycleCommands:
     """The regression the CLI-layer-only guard could not catch: the agent's
     `cronjob` model tool calls cron.jobs.create_job directly, bypassing
-    hermes_cli.cron.cron_create. Enforcing at create_job covers both."""
+    papylonation_cli.cron.cron_create. Enforcing at create_job covers both."""
 
     @pytest.fixture(autouse=True)
     def _setup_cron_dir(self, tmp_path, monkeypatch):

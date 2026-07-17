@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 import plugins.dashboard_auth.self_hosted as oidc_plugin
-from hermes_cli.dashboard_auth import (
+from papylonation_cli.dashboard_auth import (
     InvalidCodeError,
     LoginStart,
     ProviderError,
@@ -473,7 +473,7 @@ class TestStartLogin:
         result = provider.start_login(
             redirect_uri="https://hermes.example/auth/callback"
         )
-        pkce = result.cookie_payload["hermes_session_pkce"]
+        pkce = result.cookie_payload["papylonation_session_pkce"]
         parts = dict(seg.split("=", 1) for seg in pkce.split(";") if "=" in seg)
         assert 43 <= len(parts["verifier"]) <= 128  # RFC 7636 §4.1
 
@@ -483,7 +483,7 @@ class TestStartLogin:
         )
         parsed = urllib.parse.urlparse(result.redirect_url)
         params = dict(urllib.parse.parse_qsl(parsed.query))
-        pkce = result.cookie_payload["hermes_session_pkce"]
+        pkce = result.cookie_payload["papylonation_session_pkce"]
         parts = dict(seg.split("=", 1) for seg in pkce.split(";") if "=" in seg)
         assert parts["state"] == params["state"]
 
@@ -493,7 +493,7 @@ class TestStartLogin:
         )
         parsed = urllib.parse.urlparse(result.redirect_url)
         params = dict(urllib.parse.parse_qsl(parsed.query))
-        pkce = result.cookie_payload["hermes_session_pkce"]
+        pkce = result.cookie_payload["papylonation_session_pkce"]
         parts = dict(seg.split("=", 1) for seg in pkce.split(";") if "=" in seg)
         expected = (
             base64.urlsafe_b64encode(
@@ -508,8 +508,8 @@ class TestStartLogin:
         a = provider.start_login(redirect_uri="https://hermes.example/auth/callback")
         b = provider.start_login(redirect_uri="https://hermes.example/auth/callback")
         assert (
-            a.cookie_payload["hermes_session_pkce"]
-            != b.cookie_payload["hermes_session_pkce"]
+            a.cookie_payload["papylonation_session_pkce"]
+            != b.cookie_payload["papylonation_session_pkce"]
         )
 
     def test_rejects_wrong_callback_path(self, provider):
@@ -1062,7 +1062,7 @@ class TestPluginRegister:
             cfg = {}
             if oauth_block is not None:
                 cfg = {"dashboard": {"oauth": oauth_block}}
-            monkeypatch.setattr("hermes_cli.config.load_config", lambda: cfg)
+            monkeypatch.setattr("papylonation_cli.config.load_config", lambda: cfg)
 
         return _set
 
@@ -1154,14 +1154,14 @@ class TestPluginRegister:
         def _broken():
             raise OSError("unreadable")
 
-        monkeypatch.setattr("hermes_cli.config.load_config", _broken)
+        monkeypatch.setattr("papylonation_cli.config.load_config", _broken)
         ctx = MagicMock()
         oidc_plugin.register(ctx)  # must not raise
         ctx.register_dashboard_auth_provider.assert_not_called()
 
     def test_non_dict_oauth_section_tolerated(self, monkeypatch):
         monkeypatch.setattr(
-            "hermes_cli.config.load_config",
+            "papylonation_cli.config.load_config",
             lambda: {"dashboard": {"oauth": "wrong type"}},
         )
         ctx = MagicMock()

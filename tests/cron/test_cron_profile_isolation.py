@@ -23,10 +23,10 @@ from pathlib import Path
 def _set_profile_env(monkeypatch, root: Path, profile_home: Path) -> None:
     """Pretend the platform default root is ``root`` and the active
     HERMES_HOME is a profile under it (``<root>/profiles/<name>``)."""
-    import hermes_constants
+    import papylonation_constants
 
     monkeypatch.setattr(
-        hermes_constants, "_get_platform_default_hermes_home", lambda: root
+        papylonation_constants, "_get_platform_default_papylonation_home", lambda: root
     )
     monkeypatch.setenv("HERMES_HOME", str(profile_home))
 
@@ -34,19 +34,19 @@ def _set_profile_env(monkeypatch, root: Path, profile_home: Path) -> None:
 def test_cron_storage_anchors_at_profile_home(tmp_path, monkeypatch):
     """Under a profile HERMES_HOME (<root>/profiles/<name>), the cron store
     resolves to <profile>/cron, NOT the shared <root>/cron."""
-    root = tmp_path / "hermes_home"
+    root = tmp_path / "papylonation_home"
     profile_home = root / "profiles" / "coder"
     profile_home.mkdir(parents=True)
 
     _set_profile_env(monkeypatch, root, profile_home)
 
-    import hermes_constants
+    import papylonation_constants
 
     # Sanity: the override is wired the way the gateway sees it.
-    assert hermes_constants.get_hermes_home().resolve() == profile_home.resolve()
-    assert hermes_constants.get_default_hermes_root().resolve() == root.resolve()
+    assert papylonation_constants.get_papylonation_home().resolve() == profile_home.resolve()
+    assert papylonation_constants.get_default_papylonation_root().resolve() == root.resolve()
 
-    # cron/jobs.py computes HERMES_DIR from get_hermes_home() at import, so a
+    # cron/jobs.py computes HERMES_DIR from get_papylonation_home() at import, so a
     # fresh import under this env anchors the store at <profile>/cron.
     import cron.jobs as jobs
 
@@ -70,7 +70,7 @@ def test_cron_storage_anchors_at_profile_home(tmp_path, monkeypatch):
 def test_cron_lock_path_anchors_at_profile_home(tmp_path, monkeypatch):
     """The tick lock is also profile-scoped, so two profile gateways tick
     independently instead of contending on one shared lock."""
-    root = tmp_path / "hermes_home"
+    root = tmp_path / "papylonation_home"
     profile_home = root / "profiles" / "coder"
     profile_home.mkdir(parents=True)
 
@@ -88,7 +88,7 @@ def test_cron_execution_home_follows_active_profile(tmp_path, monkeypatch):
     """Execution-time home resolution (.env / config.yaml / scripts) follows
     the active profile, not the shared root — so a profile gateway runs its
     jobs with that profile's runtime config."""
-    root = tmp_path / "hermes_home"
+    root = tmp_path / "papylonation_home"
     profile_home = root / "profiles" / "coder"
     profile_home.mkdir(parents=True)
 
@@ -97,21 +97,21 @@ def test_cron_execution_home_follows_active_profile(tmp_path, monkeypatch):
     import cron.scheduler as scheduler
 
     # The module-level test override must be clear so the dynamic path runs.
-    monkeypatch.setattr(scheduler, "_hermes_home", None, raising=False)
-    assert scheduler._get_hermes_home().resolve() == profile_home.resolve()
-    assert scheduler._get_hermes_home().resolve() != root.resolve()
+    monkeypatch.setattr(scheduler, "_papylonation_home", None, raising=False)
+    assert scheduler._get_papylonation_home().resolve() == profile_home.resolve()
+    assert scheduler._get_papylonation_home().resolve() != root.resolve()
 
 
 def test_cron_storage_unaffected_when_no_profile(tmp_path, monkeypatch):
     """With no profile (HERMES_HOME == root), the store is the root's cron dir
     — unchanged behavior for single-profile installs."""
-    root = tmp_path / "hermes_home"
+    root = tmp_path / "papylonation_home"
     root.mkdir(parents=True)
 
-    import hermes_constants
+    import papylonation_constants
 
     monkeypatch.setattr(
-        hermes_constants, "_get_platform_default_hermes_home", lambda: root
+        papylonation_constants, "_get_platform_default_papylonation_home", lambda: root
     )
     monkeypatch.setenv("HERMES_HOME", str(root))
 

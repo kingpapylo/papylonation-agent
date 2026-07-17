@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from hermes_cli.console_engine import HermesConsoleEngine, run_console_repl
+from papylonation_cli.console_engine import HermesConsoleEngine, run_console_repl
 
 
 EXPECTED_CONSOLE_COMMANDS = {
@@ -231,7 +231,7 @@ MUTATING_CONFIRMATION_SMOKE_COMMANDS = [
 ]
 
 
-def test_console_parses_bare_and_hermes_prefixed_commands(_isolate_hermes_home):
+def test_console_parses_bare_and_papylonation_prefixed_commands(_isolate_papylonation_home):
     engine = HermesConsoleEngine()
 
     bare = engine.execute("config path")
@@ -245,9 +245,9 @@ def test_console_parses_bare_and_hermes_prefixed_commands(_isolate_hermes_home):
 
 def test_console_status_hides_cli_next_step_footer(
     monkeypatch: pytest.MonkeyPatch,
-    _isolate_hermes_home,
+    _isolate_papylonation_home,
 ):
-    import hermes_cli.status as status_mod
+    import papylonation_cli.status as status_mod
 
     def fake_show_status(_args):
         print("◆ Sessions")
@@ -273,9 +273,9 @@ def test_console_status_hides_cli_next_step_footer(
 
 def test_console_status_hides_osc_linked_cli_next_step_footer(
     monkeypatch: pytest.MonkeyPatch,
-    _isolate_hermes_home,
+    _isolate_papylonation_home,
 ):
-    import hermes_cli.status as status_mod
+    import papylonation_cli.status as status_mod
 
     def osc_link(text: str) -> str:
         return f"\x1b]8;;https://example.test\x1b\\{text}\x1b]8;;\x1b\\"
@@ -401,13 +401,13 @@ def test_help_lists_supported_commands_and_not_full_cli():
     assert "gateway restart" not in result.output
 
 
-def test_config_set_requires_confirmation_then_writes(_isolate_hermes_home):
+def test_config_set_requires_confirmation_then_writes(_isolate_papylonation_home):
     engine = HermesConsoleEngine()
 
     pending = engine.execute("config set console.test true")
     assert pending.status == "confirm_required"
 
-    from hermes_cli.config import read_raw_config
+    from papylonation_cli.config import read_raw_config
 
     assert read_raw_config() == {}
 
@@ -418,8 +418,8 @@ def test_config_set_requires_confirmation_then_writes(_isolate_hermes_home):
     assert read_raw_config()["console"]["test"] is True
 
 
-def test_sessions_list_and_stats_use_isolated_session_store(_isolate_hermes_home):
-    from hermes_state import SessionDB
+def test_sessions_list_and_stats_use_isolated_session_store(_isolate_papylonation_home):
+    from papylonation_state import SessionDB
 
     db = SessionDB()
     try:
@@ -439,7 +439,7 @@ def test_sessions_list_and_stats_use_isolated_session_store(_isolate_hermes_home
     assert "Listable sessions: 1" in stats.output
 
 
-def test_cron_pause_resume_and_run_require_confirmation(_isolate_hermes_home):
+def test_cron_pause_resume_and_run_require_confirmation(_isolate_papylonation_home):
     from cron.jobs import create_job, get_job
 
     job = create_job(prompt="say hello", schedule="every 1h", name="alpha")
@@ -468,7 +468,7 @@ def test_cron_pause_resume_and_run_require_confirmation(_isolate_hermes_home):
     assert "Triggered job" in triggered.output
 
 
-def test_repl_runs_non_interactive_lines_without_prompts(_isolate_hermes_home):
+def test_repl_runs_non_interactive_lines_without_prompts(_isolate_papylonation_home):
     stdin = io.StringIO("help\nexit\n")
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -486,7 +486,7 @@ def test_repl_runs_non_interactive_lines_without_prompts(_isolate_hermes_home):
     assert stderr.getvalue() == ""
 
 
-def test_repl_refuses_non_interactive_confirmation(_isolate_hermes_home):
+def test_repl_refuses_non_interactive_confirmation(_isolate_papylonation_home):
     stdin = io.StringIO("config set console.test true\n")
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -502,11 +502,11 @@ def test_repl_refuses_non_interactive_confirmation(_isolate_hermes_home):
     assert "Confirmation required" in stderr.getvalue()
 
 
-def test_main_console_subcommand_smoke(_isolate_hermes_home):
+def test_main_console_subcommand_smoke(_isolate_papylonation_home):
     import subprocess
 
     result = subprocess.run(
-        [sys.executable, "-m", "hermes_cli.main", "console"],
+        [sys.executable, "-m", "papylonation_cli.main", "console"],
         cwd=Path(__file__).resolve().parents[2],
         input="help\nexit\n",
         text=True,

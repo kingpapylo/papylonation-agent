@@ -853,7 +853,7 @@ class TestNonInteractiveFailFastAtCallbackBoundary:
         err = capsys.readouterr().err
         assert "https://idp.example.com/authorize" not in err
 
-    def test_boundary_errors_point_at_hermes_mcp_login(self, monkeypatch):
+    def test_boundary_errors_point_at_papylonation_mcp_login(self, monkeypatch):
         """Both boundaries emit an actionable next step."""
         import tools.mcp_oauth as mod
         import asyncio

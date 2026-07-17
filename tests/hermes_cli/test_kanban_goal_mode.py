@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from hermes_cli import kanban_db as kb
-from hermes_cli import goals
+from papylonation_cli import kanban_db as kb
+from papylonation_cli import goals
 
 
 @pytest.fixture

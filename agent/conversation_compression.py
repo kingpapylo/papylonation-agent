@@ -57,13 +57,13 @@ def _lock_api_is_absent_on_session_db(lock_db: Any) -> bool:
     """Whether the live in-memory SessionDB class structurally predates locks.
 
     In the supported hot-reload skew, this module is new while the already
-    imported ``hermes_state.SessionDB`` class (and its live instances) is old.
+    imported ``papylonation_state.SessionDB`` class (and its live instances) is old.
     Only that exact class identity may fail open. Proxies, nominal lookalikes,
     non-callables, and descriptor failures must fail closed. Static lookup
     avoids invoking a present-but-broken descriptor.
     """
     try:
-        from hermes_state import SessionDB
+        from papylonation_state import SessionDB
 
         missing = object()
         return (
@@ -879,14 +879,14 @@ def compress_context(
                     # The gateway/tools session context (ContextVar + env) and the
                     # logging session context are SEPARATE mechanisms. The call above
                     # moves the former; the ``[session_id]`` tag on log lines comes
-                    # from ``hermes_logging._session_context`` (set once per turn in
+                    # from ``papylonation_logging._session_context`` (set once per turn in
                     # conversation_loop.py). Without this, post-rotation log lines in
                     # the same turn keep the STALE old id while the message/DB/gateway
                     # state carry the new one — breaking log correlation exactly at the
                     # compaction boundary (see #34089). Guarded separately so a logging
                     # failure can never regress the routing update above.
                     try:
-                        from hermes_logging import set_session_context
+                        from papylonation_logging import set_session_context
 
                         set_session_context(agent.session_id)
                     except Exception:
@@ -922,7 +922,7 @@ def compress_context(
                         except Exception:
                             os.environ["HERMES_SESSION_ID"] = agent.session_id
                         try:
-                            from hermes_logging import set_session_context
+                            from papylonation_logging import set_session_context
                             set_session_context(agent.session_id)
                         except Exception:
                             pass
@@ -944,7 +944,7 @@ def compress_context(
                     # per-session lookup with no parent walk, so without this an
                     # active goal silently dies at the boundary (#33618).
                     try:
-                        from hermes_cli.goals import migrate_goal_to_session
+                        from papylonation_cli.goals import migrate_goal_to_session
                         migrate_goal_to_session(old_session_id, agent.session_id, reason="compression")
                     except Exception as _goal_err:
                         logger.debug("Could not migrate goal on compression: %s", _goal_err)
@@ -1347,7 +1347,7 @@ def try_shrink_image_parts_in_messages(
                 "image/jpeg": ".jpg", "image/jpg": ".jpg", "image/bmp": ".bmp",
             }.get(mime, ".jpg")
             tmp = tempfile.NamedTemporaryFile(
-                prefix="hermes_shrink_", suffix=suffix, delete=False,
+                prefix="papylonation_shrink_", suffix=suffix, delete=False,
             )
             try:
                 tmp.write(raw)

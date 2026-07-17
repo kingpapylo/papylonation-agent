@@ -29,11 +29,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from hermes_constants import get_hermes_home
+    from papylonation_constants import get_papylonation_home
 except Exception:  # pragma: no cover — plugin may load before constants resolves
     import os
 
-    def get_hermes_home() -> Path:  # type: ignore[no-redef]
+    def get_papylonation_home() -> Path:  # type: ignore[no-redef]
         val = (os.environ.get("HERMES_HOME") or "").strip()
         return Path(val).resolve() if val else (Path.home() / ".hermes").resolve()
 
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 def get_state_dir() -> Path:
     """State dir — separate from ``$HERMES_HOME/logs/``."""
-    return get_hermes_home() / "disk-cleanup"
+    return get_papylonation_home() / "disk-cleanup"
 
 
 def get_tracked_file() -> Path:
@@ -68,9 +68,9 @@ def is_safe_path(path: Path) -> bool:
 
     Rejects Windows mounts (``/mnt/c`` etc.) and any system directory.
     """
-    hermes_home = get_hermes_home()
+    papylonation_home = get_papylonation_home()
     try:
-        path.resolve().relative_to(hermes_home)
+        path.resolve().relative_to(papylonation_home)
         return True
     except (ValueError, OSError):
         pass
@@ -177,9 +177,9 @@ def _is_protected_cron_path(p: Path) -> bool:
     # Lazily build the set once per process so HERMES_HOME is resolved
     # exactly once.
     if not _PROTECTED_CRON_PATHS:
-        hermes_home = get_hermes_home()
+        papylonation_home = get_papylonation_home()
         for parent in ("cron", "cronjobs"):
-            base = hermes_home / parent
+            base = papylonation_home / parent
             _PROTECTED_CRON_PATHS.add(str(base))
             _PROTECTED_CRON_PATHS.add(str(base / "output"))
             _PROTECTED_CRON_PATHS.add(str(base / "jobs.json"))
@@ -368,11 +368,11 @@ def quick() -> Dict[str, Any]:
     # durable state trees.  Some installs place the Hermes checkout, venv,
     # and desktop build under HERMES_HOME; a full rglob over that tree can
     # stall the gateway event loop for minutes.
-    hermes_home = get_hermes_home()
+    papylonation_home = get_papylonation_home()
     empty_removed = 0
     sweep_stack: List[Tuple[Path, bool]] = []
     try:
-        for top in hermes_home.iterdir():
+        for top in papylonation_home.iterdir():
             if (
                 top.is_dir()
                 and not top.is_symlink()
@@ -555,9 +555,9 @@ def guess_category(path: Path) -> Optional[str]:
         return None
 
     # Skip the state dir itself, logs, memory files, sessions, config.
-    hermes_home = get_hermes_home()
+    papylonation_home = get_papylonation_home()
     try:
-        rel = path.resolve().relative_to(hermes_home)
+        rel = path.resolve().relative_to(papylonation_home)
         top = rel.parts[0] if rel.parts else ""
         if top in {
             "disk-cleanup", "logs", "memories", "sessions", "config.yaml",

@@ -226,16 +226,16 @@ check_key() {
     local var="$1"
     local kc_account="$2"
     local kc_service="$3"
-    local _hermes_env="${HERMES_HOME:-$HOME/.hermes}/.env"
-    if grep -q "^${var}=" "$_hermes_env" 2>/dev/null && \
-       [ -n "$(grep "^${var}=" "$_hermes_env" | cut -d= -f2-)" ]; then
+    local _papylonation_env="${HERMES_HOME:-$HOME/.hermes}/.env"
+    if grep -q "^${var}=" "$_papylonation_env" 2>/dev/null && \
+       [ -n "$(grep "^${var}=" "$_papylonation_env" | cut -d= -f2-)" ]; then
         return 0
     fi
     if command -v security >/dev/null 2>&1 && \
        security find-generic-password -a "${kc_account}" -s "${kc_service}" -w >/dev/null 2>&1; then
         return 0
     fi
-    echo "ERROR: ${var} not set in ${_hermes_env} or Keychain (${kc_account}/${kc_service})"
+    echo "ERROR: ${var} not set in ${_papylonation_env} or Keychain (${kc_account}/${kc_service})"
     return 1
 }
 

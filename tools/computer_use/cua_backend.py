@@ -115,7 +115,7 @@ def _cua_telemetry_disabled() -> bool:
     privacy-preserving default of telemetry disabled.
     """
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
 
         cfg = load_config() or {}
         cu = cfg.get("computer_use") or {}
@@ -728,12 +728,12 @@ class _CuaDriverSession:
             # passes but the wrapper times out" reports are undiagnosable
             # from a bare "never reached ready".
             phase = getattr(self, "_startup_phase", "unknown")
-            from hermes_constants import display_hermes_home
+            from papylonation_constants import display_papylonation_home
             raise RuntimeError(
                 "cua-driver session never reached ready (timeout 30s; "
                 f"stuck in phase: {phase}). "
                 "Run `hermes computer-use doctor` and check "
-                f"{display_hermes_home()}/logs/agent.log for the phase timings."
+                f"{display_papylonation_home()}/logs/agent.log for the phase timings."
             )
         # If setup failed, the lifecycle coroutine set _setup_error
         # before setting _ready_event. Re-raise it on the caller's thread.

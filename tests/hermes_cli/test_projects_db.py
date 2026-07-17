@@ -1,4 +1,4 @@
-"""Tests for the per-profile Projects store (hermes_cli/projects_db)."""
+"""Tests for the per-profile Projects store (papylonation_cli/projects_db)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from hermes_cli import projects_db as pdb
+from papylonation_cli import projects_db as pdb
 
 
 @pytest.fixture
@@ -168,7 +168,7 @@ def test_per_profile_isolation(tmp_path):
         b.close()
 
 
-def test_db_path_under_hermes_home():
+def test_db_path_under_papylonation_home():
     # Resolves under HERMES_HOME (set by the autouse isolation fixture).
     assert pdb.projects_db_path().name == "projects.db"
     assert os.path.basename(str(pdb.projects_db_path().parent))  # non-empty parent

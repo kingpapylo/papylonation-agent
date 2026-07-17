@@ -1,4 +1,4 @@
-"""Tests for hermes_cli configuration management."""
+"""Tests for papylonation_cli configuration management."""
 
 import os
 from pathlib import Path
@@ -7,11 +7,11 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from hermes_cli.config import (
+from papylonation_cli.config import (
     DEFAULT_CONFIG,
     check_config_version,
-    get_hermes_home,
-    ensure_hermes_home,
+    get_papylonation_home,
+    ensure_papylonation_home,
     get_compatible_custom_providers,
     _explicit_config_paths,
     _normalize_max_turns_config,
@@ -34,19 +34,19 @@ class TestGetHermesHome:
     def test_default_path(self):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("HERMES_HOME", None)
-            home = get_hermes_home()
+            home = get_papylonation_home()
             assert home == Path.home() / ".hermes"
 
     def test_env_override(self):
         with patch.dict(os.environ, {"HERMES_HOME": "/custom/path"}):
-            home = get_hermes_home()
+            home = get_papylonation_home()
             assert home == Path("/custom/path")
 
 
 class TestEnsureHermesHome:
     def test_creates_subdirs(self, tmp_path):
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
-            ensure_hermes_home()
+            ensure_papylonation_home()
             assert (tmp_path / "cron").is_dir()
             assert (tmp_path / "sessions").is_dir()
             assert (tmp_path / "logs").is_dir()
@@ -54,7 +54,7 @@ class TestEnsureHermesHome:
 
     def test_creates_default_soul_md_if_missing(self, tmp_path):
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
-            ensure_hermes_home()
+            ensure_papylonation_home()
             soul_path = tmp_path / "SOUL.md"
             assert soul_path.exists()
             assert soul_path.read_text(encoding="utf-8").strip() != ""
@@ -63,38 +63,38 @@ class TestEnsureHermesHome:
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text("custom soul", encoding="utf-8")
-            ensure_hermes_home()
+            ensure_papylonation_home()
             assert soul_path.read_text(encoding="utf-8") == "custom soul"
 
     def test_upgrades_legacy_template_soul_md(self, tmp_path):
         # Older installers seeded a comment-only scaffold that shadowed the
         # runtime default. A SOUL.md still matching that scaffold carries no
         # user persona and should be upgraded in place to DEFAULT_SOUL_MD.
-        from hermes_cli.default_soul import DEFAULT_SOUL_MD, _LEGACY_TEMPLATE_SOULS
+        from papylonation_cli.default_soul import DEFAULT_SOUL_MD, _LEGACY_TEMPLATE_SOULS
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text(_LEGACY_TEMPLATE_SOULS[0] + "\n", encoding="utf-8")
-            ensure_hermes_home()
+            ensure_papylonation_home()
             assert soul_path.read_text(encoding="utf-8") == DEFAULT_SOUL_MD
 
     def test_preserves_legacy_template_with_user_persona(self, tmp_path):
         # If the user typed a persona alongside the scaffold, the content no
         # longer matches the known empty template — leave it untouched.
-        from hermes_cli.default_soul import _LEGACY_TEMPLATE_SOULS
+        from papylonation_cli.default_soul import _LEGACY_TEMPLATE_SOULS
 
         mixed = _LEGACY_TEMPLATE_SOULS[0] + "\nYou are a helpful pirate."
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text(mixed, encoding="utf-8")
-            ensure_hermes_home()
+            ensure_papylonation_home()
             assert soul_path.read_text(encoding="utf-8") == mixed
 
     def test_existing_named_profile_still_bootstraps_subdirs(self, tmp_path):
         profile_home = tmp_path / ".hermes" / "profiles" / "coder"
         profile_home.mkdir(parents=True)
         with patch.dict(os.environ, {"HERMES_HOME": str(profile_home)}):
-            ensure_hermes_home()
+            ensure_papylonation_home()
             assert (profile_home / "cron").is_dir()
             assert (profile_home / "sessions").is_dir()
             assert (profile_home / "memories").is_dir()
@@ -103,7 +103,7 @@ class TestEnsureHermesHome:
         profile_home = tmp_path / ".hermes" / "profiles" / "coder"
         with patch.dict(os.environ, {"HERMES_HOME": str(profile_home)}):
             with pytest.raises(FileNotFoundError, match="Named profile home does not exist"):
-                ensure_hermes_home()
+                ensure_papylonation_home()
         assert not profile_home.exists()
 
 
@@ -144,14 +144,14 @@ class TestLoadConfigParseFailure:
     def test_logs_and_warns_on_parse_failure(self, tmp_path, caplog, capsys):
         # Reset the dedup cache so this test isn't affected by other tests
         # that may have warned about a different broken config.
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             (tmp_path / "config.yaml").write_text("\tbroken tab indent:\n")
 
             import logging
-            with caplog.at_level(logging.WARNING, logger="hermes_cli.config"):
+            with caplog.at_level(logging.WARNING, logger="papylonation_cli.config"):
                 config = load_config()
 
             # Falls back to defaults — confirms the silent-fallback we're warning about
@@ -171,7 +171,7 @@ class TestLoadConfigParseFailure:
             assert str(tmp_path / "config.yaml") in captured.err
 
     def test_dedup_on_repeated_load_same_file(self, tmp_path, capsys):
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -187,7 +187,7 @@ class TestLoadConfigParseFailure:
 
     def test_rewarns_after_file_edit(self, tmp_path, capsys):
         import time
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -209,7 +209,7 @@ class TestLoadConfigParseFailure:
         Ported from google-gemini/gemini-cli#21541 (policy-file TOML recovery),
         adapted: we back up but deliberately do NOT reset config.yaml.
         """
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -231,7 +231,7 @@ class TestLoadConfigParseFailure:
     def test_backup_skips_when_same_size_bak_exists(self, tmp_path, capsys):
         """Don't churn backups: if a corrupt backup of the same size already
         exists (same corruption already preserved), skip making another."""
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -253,7 +253,7 @@ class TestLoadConfigParseFailure:
         import sys as _sys
         if _sys.platform == "win32":
             pytest.skip("symlink creation requires privileges on Windows")
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -278,7 +278,7 @@ class TestLoadConfigParseFailure:
         parses again.
         """
         import time
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -308,7 +308,7 @@ class TestLoadConfigParseFailure:
     def test_last_known_good_recovers_after_fix(self, tmp_path):
         """Fixing the YAML picks up the new content on the next load."""
         import time
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -327,7 +327,7 @@ class TestLoadConfigParseFailure:
     def test_fresh_process_still_falls_back_to_defaults(self, tmp_path):
         """With no last-known-good (fresh process for this path), a broken
         config still falls back to DEFAULT_CONFIG as before."""
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -343,7 +343,7 @@ class TestLoadConfigParseFailure:
         """Repeated loads of the same broken file serve the cached LKG and
         don't re-warn (dedup on mtime/size still applies)."""
         import time
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
         cfg_mod._CONFIG_PARSE_WARNED.clear()
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -380,7 +380,7 @@ class TestEmptyConfigSections:
     def test_null_override_of_non_dict_default_still_applies(self, tmp_path):
         """None only shields dict defaults — explicit null for a scalar
         key remains an override (unchanged behavior)."""
-        from hermes_cli.config import _deep_merge
+        from papylonation_cli.config import _deep_merge
 
         merged = _deep_merge({"scalar": 5, "section": {"a": 1}},
                              {"scalar": None, "section": None})
@@ -444,7 +444,7 @@ class TestSaveAndLoadRoundtrip:
         fail closed on an unreadable existing config.yaml — this locks in the
         whole bug class (gateway slash commands, doctor --fix, yuanbao/telegram
         auto-sethome, tui_gateway _save_cfg), not just the three named paths."""
-        from hermes_cli.config import atomic_config_write
+        from papylonation_cli.config import atomic_config_write
 
         config_path = tmp_path / "config.yaml"
         original = "model:\n  provider: openrouter\n"
@@ -459,7 +459,7 @@ class TestSaveAndLoadRoundtrip:
     def test_atomic_config_write_creates_new_file(self, tmp_path):
         """A genuinely absent config.yaml must still be created — the guard
         only refuses to clobber an existing-but-unreadable file."""
-        from hermes_cli.config import atomic_config_write
+        from papylonation_cli.config import atomic_config_write
 
         config_path = tmp_path / "config.yaml"
         assert not config_path.exists()
@@ -879,27 +879,27 @@ class TestOptionalEnvVarsRegistry:
 
     def test_tavily_api_key_registered(self):
         """TAVILY_API_KEY is listed in OPTIONAL_ENV_VARS."""
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         assert "TAVILY_API_KEY" in OPTIONAL_ENV_VARS
 
     def test_tavily_api_key_is_tool_category(self):
         """TAVILY_API_KEY is in the 'tool' category."""
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         assert OPTIONAL_ENV_VARS["TAVILY_API_KEY"]["category"] == "tool"
 
     def test_tavily_api_key_is_password(self):
         """TAVILY_API_KEY is marked as password."""
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         assert OPTIONAL_ENV_VARS["TAVILY_API_KEY"]["password"] is True
 
     def test_tavily_api_key_has_url(self):
         """TAVILY_API_KEY has a URL."""
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         assert OPTIONAL_ENV_VARS["TAVILY_API_KEY"]["url"] == "https://app.tavily.com/home"
 
     def test_tavily_in_env_vars_by_version(self):
         """TAVILY_API_KEY is listed in ENV_VARS_BY_VERSION."""
-        from hermes_cli.config import ENV_VARS_BY_VERSION
+        from papylonation_cli.config import ENV_VARS_BY_VERSION
         all_vars = []
         for vars_list in ENV_VARS_BY_VERSION.values():
             all_vars.extend(vars_list)
@@ -914,7 +914,7 @@ class TestOptionalEnvVarsRegistry:
         via config.yaml; HERMES_MAX_ITERATIONS remains a read-only backward-compat
         fallback in the gateway/CLI, never a promoted write target.
         """
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         assert "HERMES_MAX_ITERATIONS" not in OPTIONAL_ENV_VARS
 
 
@@ -941,29 +941,29 @@ class TestMemoryProviderEnvVarsRegistry:
     }
 
     def test_memory_provider_keys_are_catalogued(self):
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         missing = [k for k in self.MEMORY_PROVIDER_KEYS if k not in OPTIONAL_ENV_VARS]
         assert not missing, f"memory provider keys missing from OPTIONAL_ENV_VARS: {missing}"
 
     def test_memory_provider_keys_are_tool_category(self):
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         for key in self.MEMORY_PROVIDER_KEYS:
             assert OPTIONAL_ENV_VARS[key]["category"] == "tool", key
 
     def test_memory_provider_keys_are_password_masked(self):
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         for key in self.MEMORY_PROVIDER_KEYS:
             assert OPTIONAL_ENV_VARS[key].get("password") is True, key
 
     def test_memory_provider_keys_advertise_their_tool(self):
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
         for key, tool in self.MEMORY_PROVIDER_KEYS.items():
             assert tool in OPTIONAL_ENV_VARS[key].get("tools", []), key
 
 
 class TestConfigMigrationSecretPrompts:
     def test_required_secret_env_prompt_uses_masked_prompt(self, tmp_path, monkeypatch):
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
 
         saved = {}
 
@@ -1091,7 +1091,7 @@ class TestCustomProviderCompatibility:
             migrate_config(interactive=False, quiet=True)
             raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
         assert raw["_config_version"] == DEFAULT_CONFIG["_config_version"]
         assert raw["providers"]["openai-direct"] == {
             "api": "https://api.openai.com/v1",
@@ -1306,7 +1306,7 @@ class TestInterimAssistantMessageConfig:
             raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
             loaded = load_config()
 
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
         assert raw["_config_version"] == DEFAULT_CONFIG["_config_version"]
         # The user's explicit non-default value is preserved on disk.
         assert raw["display"]["tool_progress"] == "off"
@@ -1343,7 +1343,7 @@ class TestDiscordChannelPromptsConfig:
             migrate_config(interactive=False, quiet=True)
             raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
         assert raw["_config_version"] == DEFAULT_CONFIG["_config_version"]
         assert raw["discord"]["auto_thread"] is True
         # channel_prompts is a DEFAULT_CONFIG value that should NOT be expanded
@@ -1410,16 +1410,16 @@ class TestEnvWriteDenylist:
     attacker who steals the token could plant
     ``LD_PRELOAD=/tmp/evil.so`` in ``.env`` and own the next Hermes
     process on next startup via the dotenv → ``os.environ`` chain in
-    ``hermes_cli/env_loader.py``.
+    ``papylonation_cli/env_loader.py``.
 
     Regression test for the dashboard pentest finding filed alongside
     the ``web-pentest`` skill (PR #32265 / issue #32267).
     """
 
     @pytest.fixture(autouse=True)
-    def _hermes_home(self, tmp_path, monkeypatch):
+    def _papylonation_home(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        ensure_hermes_home()
+        ensure_papylonation_home()
 
     @pytest.mark.parametrize(
         "denied_key",
@@ -1467,7 +1467,7 @@ class TestEnvWriteDenylist:
             "HERMES_MAX_ITERATIONS",
         ],
     )
-    def test_hermes_integration_keys_still_writable(self, allowed_key):
+    def test_papylonation_integration_keys_still_writable(self, allowed_key):
         """``HERMES_*`` overall is NOT blocked — only the four runtime
         location names (HOME/PROFILE/CONFIG/ENV) are. Integration
         credentials following the ``HERMES_*`` convention must keep
@@ -1584,7 +1584,7 @@ class TestMigrationWriteInvariant:
         writes must go through _persist_migration()."""
         import ast
         import inspect
-        from hermes_cli import config as cfg_mod
+        from papylonation_cli import config as cfg_mod
 
         src = inspect.getsource(cfg_mod.migrate_config)
         tree = ast.parse(src.lstrip())
@@ -1699,7 +1699,7 @@ platforms:
         assert "platforms" not in raw
 
     def test_persist_migration_writes_full_read_raw_config(self, tmp_path):
-        from hermes_cli.config import _persist_migration, read_raw_config
+        from papylonation_cli.config import _persist_migration, read_raw_config
 
         body = """_config_version: 30
 model:
@@ -1805,7 +1805,7 @@ class TestVerifyOnStopMigration:
     def test_post_v32_explicit_true_preserved(self, tmp_path):
         # A `true` the user sets AFTER v32 (config already at current version) is
         # a deliberate opt-in and must never be flipped.
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             self._write(
@@ -1825,7 +1825,7 @@ class TestVerifyOnStopMigration:
             assert raw["agent"]["verify_on_stop"] is False
 
     def test_already_current_version_is_noop(self, tmp_path):
-        from hermes_cli.config import DEFAULT_CONFIG
+        from papylonation_cli.config import DEFAULT_CONFIG
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
             self._write(

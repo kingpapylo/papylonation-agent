@@ -57,7 +57,7 @@ SKIP_DIRS = {
     "scripts/",
     "skills/",
     "optional-skills/",
-    "hermes_cli/",
+    "papylonation_cli/",
     "gateway/",
     "cron/",
 }

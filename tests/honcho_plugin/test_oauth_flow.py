@@ -164,7 +164,7 @@ def test_source_tags_the_authorize_link(fake_as):
     assert "source=" not in untagged
 
 
-def test_client_id_defaults_to_hermes_agent(monkeypatch):
+def test_client_id_defaults_to_papylonation_agent(monkeypatch):
     # One client for every surface; the env var overrides for unusual deployments.
     monkeypatch.delenv("HONCHO_OAUTH_CLIENT_ID", raising=False)
     common = {"environment": "production", "base_url": "https://api.honcho.dev"}
@@ -336,7 +336,7 @@ def test_memory_oauth_router_dispatches_by_provider_convention():
     # The generic seam behind the two routes: provider → plugins.memory.<p>.oauth_flow.
     from fastapi import HTTPException
 
-    from hermes_cli.memory_oauth import _resolve_flow
+    from papylonation_cli.memory_oauth import _resolve_flow
 
     mod = _resolve_flow("honcho")
     assert hasattr(mod, "start_loopback_flow_background") and hasattr(mod, "get_flow_status")

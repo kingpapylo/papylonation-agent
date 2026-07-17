@@ -14,15 +14,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from hermes_constants import OPENROUTER_BASE_URL
-from hermes_cli.config import load_env
+from papylonation_constants import OPENROUTER_BASE_URL
+from papylonation_cli.config import load_env
 from agent.secret_scope import get_secret as _get_secret
 from agent.credential_persistence import (
     is_borrowed_credential_source,
     sanitize_borrowed_credential_payload,
 )
-import hermes_cli.auth as auth_mod
-from hermes_cli.auth import (
+import papylonation_cli.auth as auth_mod
+from papylonation_cli.auth import (
     CODEX_ACCESS_TOKEN_REFRESH_SKEW_SECONDS,
     PROVIDER_REGISTRY,
     _auth_store_lock,
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 def _load_config_safe() -> Optional[dict]:
     """Load config.yaml, returning None on any error."""
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
 
         return load_config()
     except Exception:
@@ -391,7 +391,7 @@ def _iter_custom_providers(config: Optional[dict] = None):
     if not isinstance(custom_providers, list):
         # Fall back to the v12+ providers dict via the compatibility layer
         try:
-            from hermes_cli.config import get_compatible_custom_providers
+            from papylonation_cli.config import get_compatible_custom_providers
 
             custom_providers = get_compatible_custom_providers(config)
         except Exception:
@@ -533,7 +533,7 @@ def _write_through_provider_state_to_global_root(
     the profile store (the caller already saved that). Swallows all errors — a
     failed write-through degrades to the pre-existing behavior (root stale), it
     must never break the profile's own successful save. Mirrors
-    ``hermes_cli.auth._write_through_xai_oauth_to_global_root`` (which covers
+    ``papylonation_cli.auth._write_through_xai_oauth_to_global_root`` (which covers
     the non-pool xAI refresh path) for the credential-pool refresh path.
     """
     try:
@@ -995,7 +995,7 @@ class CredentialPool:
                 # profile reading the stale root grant dies with
                 # refresh_token_reused / invalid_grant once its access token
                 # expires. This mirrors the xAI write-through in
-                # hermes_cli.auth._save_xai_oauth_tokens (#43589); the pool
+                # papylonation_cli.auth._save_xai_oauth_tokens (#43589); the pool
                 # refresh path is the Codex/xAI analog reported in #48415.
                 _wt_provider_id = {
                     "nous": "nous",
@@ -1137,7 +1137,7 @@ class CredentialPool:
 
                 refreshed = refresh_anthropic_oauth_pure(
                     entry.refresh_token,
-                    use_json=entry.source.endswith("hermes_pkce"),
+                    use_json=entry.source.endswith("papylonation_pkce"),
                 )
                 updated = replace(
                     entry,
@@ -1218,7 +1218,7 @@ class CredentialPool:
                         from agent.anthropic_adapter import refresh_anthropic_oauth_pure
                         refreshed = refresh_anthropic_oauth_pure(
                             synced.refresh_token,
-                            use_json=synced.source.endswith("hermes_pkce"),
+                            use_json=synced.source.endswith("papylonation_pkce"),
                         )
                         updated = replace(
                             synced,
@@ -1936,7 +1936,7 @@ def _normalize_pool_priorities(provider: str, entries: List[PooledCredential]) -
     source_rank = {
         "env:ANTHROPIC_TOKEN": 0,
         "env:CLAUDE_CODE_OAUTH_TOKEN": 1,
-        "hermes_pkce": 2,
+        "papylonation_pkce": 2,
         "claude_code": 3,
         "env:ANTHROPIC_API_KEY": 4,
     }
@@ -1971,7 +1971,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
     # Shared suppression gate — used at every upsert site so
     # `hermes auth remove <provider> <N>` is stable across all source types.
     try:
-        from hermes_cli.auth import is_source_suppressed as _is_suppressed
+        from papylonation_cli.auth import is_source_suppressed as _is_suppressed
     except ImportError:
         def _is_suppressed(_p, _s):  # type: ignore[misc]
             return False
@@ -1982,7 +1982,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # Without this gate, auxiliary client fallback chains silently read
         # ~/.claude/.credentials.json without user consent.  See PR #4210.
         try:
-            from hermes_cli.auth import is_provider_explicitly_configured
+            from papylonation_cli.auth import is_provider_explicitly_configured
             if not is_provider_explicitly_configured("anthropic"):
                 return changed, active_sources
         except ImportError:
@@ -1995,7 +1995,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # API key and zeros ANTHROPIC_TOKEN; `save_anthropic_oauth_token()`
         # does the inverse.  When that signal is present we MUST NOT seed
         # autodiscovered OAuth tokens (~/.claude/.credentials.json from the
-        # Claude Code CLI, hermes_pkce creds from a previous OAuth login)
+        # Claude Code CLI, papylonation_pkce creds from a previous OAuth login)
         # into the anthropic pool — otherwise rotation on a 401/429 silently
         # flips the session onto an OAuth credential, which forces the Claude
         # Code identity injection, `mcp_` tool-name rewrite, and claude-cli
@@ -2023,17 +2023,17 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
             # transient 401 could revive them.
             retained = [
                 entry for entry in entries
-                if entry.source not in {"hermes_pkce", "claude_code"}
+                if entry.source not in {"papylonation_pkce", "claude_code"}
             ]
             if len(retained) != len(entries):
                 entries[:] = retained
                 changed = True
             return changed, active_sources
 
-        from agent.anthropic_adapter import read_claude_code_credentials, read_hermes_oauth_credentials
+        from agent.anthropic_adapter import read_claude_code_credentials, read_papylonation_oauth_credentials
 
         for source_name, creds in (
-            ("hermes_pkce", read_hermes_oauth_credentials()),
+            ("papylonation_pkce", read_papylonation_oauth_credentials()),
             ("claude_code", read_claude_code_credentials()),
         ):
             if creds and creds.get("accessToken"):
@@ -2120,7 +2120,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # env vars (COPILOT_GITHUB_TOKEN / GH_TOKEN).  They don't live in
         # the auth store or credential pool, so we resolve them here.
         try:
-            from hermes_cli.copilot_auth import resolve_copilot_token, get_copilot_api_token
+            from papylonation_cli.copilot_auth import resolve_copilot_token, get_copilot_api_token
             token, source = resolve_copilot_token()
             if token:
                 api_token, enterprise_base_url = get_copilot_api_token(token)
@@ -2155,7 +2155,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # Use refresh_if_expiring=False to avoid network calls during
         # pool loading / provider discovery.
         try:
-            from hermes_cli.auth import resolve_qwen_runtime_credentials
+            from papylonation_cli.auth import resolve_qwen_runtime_credentials
             creds = resolve_qwen_runtime_credentials(refresh_if_expiring=False)
             token = creds.get("api_key", "")
             if token:
@@ -2186,7 +2186,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
         # always refreshes on expiry, so instead read raw state here to avoid
         # surprise network calls during provider discovery.
         try:
-            from hermes_cli.auth import get_provider_auth_state
+            from papylonation_cli.auth import get_provider_auth_state
             state = get_provider_auth_state("minimax-oauth")
             if state and state.get("access_token"):
                 source_name = "oauth"
@@ -2269,7 +2269,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
             if _is_suppressed(provider, source):
                 return changed, active_sources
             active_sources.add(source)
-            from hermes_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
+            from papylonation_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
 
             base_url = DEFAULT_XAI_OAUTH_BASE_URL
             changed |= _upsert_entry(
@@ -2304,7 +2304,7 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
         env_val = os.environ.get(key, "").strip()
         # If .env contains an unresolved op:// reference, prefer the
         # already-resolved value from os.environ (set by
-        # load_hermes_dotenv() -> apply_onepassword_secrets()).  The raw
+        # load_papylonation_dotenv() -> apply_onepassword_secrets()).  The raw
         # "op://Vault/Item/field" string would otherwise win and every
         # provider auth attempt would receive a URL instead of a key.  This
         # happens during a partial migration, or when the user wrote op://
@@ -2321,14 +2321,14 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
     # Without this gate the removal is silently undone on the next
     # load_pool() call whenever the var is still exported by the shell.
     try:
-        from hermes_cli.auth import is_source_suppressed as _is_source_suppressed
+        from papylonation_cli.auth import is_source_suppressed as _is_source_suppressed
     except ImportError:
         def _is_source_suppressed(_p, _s):  # type: ignore[misc]
             return False
 
     def _secret_source_for_env(env_var: str) -> Optional[str]:
         try:
-            from hermes_cli.env_loader import get_secret_source
+            from papylonation_cli.env_loader import get_secret_source
             source_label = get_secret_source(env_var)
         except Exception:
             source_label = None
@@ -2438,7 +2438,7 @@ def _prune_stale_seeded_entries(
         # PKCE should disappear from the pool when their backing file is gone.
         return (
             is_borrowed_credential_source(entry.source, entry.provider)
-            or entry.source == "hermes_pkce"
+            or entry.source == "papylonation_pkce"
         )
 
     retained = [
@@ -2461,7 +2461,7 @@ def _seed_custom_pool(pool_key: str, entries: List[PooledCredential]) -> Tuple[b
 
     # Shared suppression gate — same pattern as _seed_from_env/_seed_from_singletons.
     try:
-        from hermes_cli.auth import is_source_suppressed as _is_suppressed
+        from papylonation_cli.auth import is_source_suppressed as _is_suppressed
     except ImportError:
         def _is_suppressed(_p, _s):  # type: ignore[misc]
             return False

@@ -698,7 +698,7 @@ class TestServerRequestRouting:
             "around approvals"
         )
 
-    def test_mcp_elicitation_for_hermes_tools_auto_accepts(self):
+    def test_mcp_elicitation_for_papylonation_tools_auto_accepts(self):
         """When codex elicits on behalf of hermes-tools (our own callback),
         accept automatically — the user already opted in by enabling the
         runtime."""

@@ -194,7 +194,7 @@ prefer `HERMES_HOME` for Hermes data and `HERMES_REAL_HOME` for the account home
 from pathlib import Path
 import os
 
-hermes_home = Path(os.environ["HERMES_HOME"])
+papylonation_home = Path(os.environ["HERMES_HOME"])
 real_home = Path(os.environ.get("HERMES_REAL_HOME", os.environ["HOME"]))
 ```
 

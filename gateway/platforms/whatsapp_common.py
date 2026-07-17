@@ -474,12 +474,12 @@ def resolve_whatsapp_bridge_dir() -> Path:
     from pathlib import Path as _Path
 
     # Default location in install tree (may be read-only)
-    from hermes_constants import get_hermes_home
+    from papylonation_constants import get_papylonation_home
     install_bridge = _Path(__file__).resolve().parents[2] / "scripts" / "whatsapp-bridge"
 
     # Try HERMES_HOME location first
-    hermes_home = get_hermes_home()
-    hermes_home_bridge = hermes_home / "scripts" / "whatsapp-bridge"
+    papylonation_home = get_papylonation_home()
+    papylonation_home_bridge = papylonation_home / "scripts" / "whatsapp-bridge"
 
     # Check if install dir is writable
     try:
@@ -494,17 +494,17 @@ def resolve_whatsapp_bridge_dir() -> Path:
         return install_bridge
 
     # Install dir is read-only, mirror to HERMES_HOME if needed
-    if hermes_home_bridge.exists():
-        return hermes_home_bridge
+    if papylonation_home_bridge.exists():
+        return papylonation_home_bridge
 
     # Mirror the bridge source to HERMES_HOME
     try:
-        hermes_home_bridge.parent.mkdir(parents=True, exist_ok=True)
+        papylonation_home_bridge.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(
             install_bridge,
-            hermes_home_bridge,
+            papylonation_home_bridge,
             dirs_exist_ok=False,
         )
-        return hermes_home_bridge
+        return papylonation_home_bridge
     except Exception:
         return install_bridge

@@ -19,10 +19,10 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 JPEG = b"\xff\xd8\xff" + b"\x00" * 64
 
 
-def _reload(monkeypatch, hermes_home: Path):
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-    import hermes_constants
-    importlib.reload(hermes_constants)
+def _reload(monkeypatch, papylonation_home: Path):
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
+    import papylonation_constants
+    importlib.reload(papylonation_constants)
     import tools.image_source as isrc
     importlib.reload(isrc)
     return isrc

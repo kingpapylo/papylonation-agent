@@ -41,7 +41,7 @@ description: "Hermes Agent 内部结构——主要子系统、执行路径、�
 ┌───────────────────┐              ┌──────────────────────┐
 │ Session Storage   │              │ Tool Backends         │
 │ (SQLite + FTS5)   │              │ Terminal (7 backends) │
-│ hermes_state.py   │              │ Browser (5 backends)  │
+│ papylonation_state.py   │              │ Browser (5 backends)  │
 │ gateway/session.py│              │ Web (4 backends)      │
 └───────────────────┘              │ MCP (dynamic)         │
                                    │ File, Vision, etc.    │
@@ -56,8 +56,8 @@ hermes-agent/
 ├── cli.py                    # HermesCLI — 交互式终端 UI（大文件）
 ├── model_tools.py            # 工具发现、schema 收集、分发
 ├── toolsets.py               # 工具分组与平台预设
-├── hermes_state.py           # 带 FTS5 的 SQLite 会话/状态数据库
-├── hermes_constants.py       # HERMES_HOME、感知 profile 的路径
+├── papylonation_state.py           # 带 FTS5 的 SQLite 会话/状态数据库
+├── papylonation_constants.py       # HERMES_HOME、感知 profile 的路径
 ├── batch_runner.py           # 批量轨迹生成
 │
 ├── agent/                    # Agent 内部模块
@@ -75,7 +75,7 @@ hermes-agent/
 │   ├── memory_provider.py   # 记忆提供者 ABC
 │   └── trajectory.py         # 轨迹保存辅助函数
 │
-├── hermes_cli/               # CLI 子命令与设置
+├── papylonation_cli/               # CLI 子命令与设置
 │   ├── main.py               # 入口点——所有 `hermes` 子命令（大文件）
 │   ├── config.py             # DEFAULT_CONFIG、OPTIONAL_ENV_VARS、迁移
 │   ├── commands.py           # COMMAND_REGISTRY——斜杠命令中央定义

@@ -124,7 +124,7 @@ def test_codex_app_server_manual_compression_routes_to_codex_thread():
     ]
 
 
-def test_codex_app_server_hermes_mode_auto_compression_routes_to_codex_thread():
+def test_codex_app_server_papylonation_mode_auto_compression_routes_to_codex_thread():
     agent = DummyAgent(
         TurnResult(thread_id="thread-1", turn_id="compact-turn-1"),
         auto_compaction="hermes",
@@ -196,7 +196,7 @@ def test_codex_app_server_native_compaction_notice_emits_status_and_event():
     ]
 
 
-def test_codex_native_boundary_clears_stale_hermes_fallback_streak():
+def test_codex_native_boundary_clears_stale_papylonation_fallback_streak():
     from unittest.mock import patch
 
     from agent.context_compressor import ContextCompressor

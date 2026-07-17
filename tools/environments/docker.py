@@ -19,7 +19,7 @@ from typing import Optional
 from tools.environments.base import BaseEnvironment, _popen_bash
 from tools.environments.local import (
     _HERMES_PROVIDER_ENV_BLOCKLIST,
-    _is_hermes_internal_secret,
+    _is_papylonation_internal_secret,
 )
 
 logger = logging.getLogger(__name__)
@@ -93,10 +93,10 @@ def _normalize_env_dict(env: dict | None) -> dict[str, str]:
     return normalized
 
 
-def _load_hermes_env_vars() -> dict[str, str]:
+def _load_papylonation_env_vars() -> dict[str, str]:
     """Load ~/.hermes/.env values without failing Docker command execution."""
     try:
-        from hermes_cli.config import load_env
+        from papylonation_cli.config import load_env
 
         return load_env() or {}
     except Exception:
@@ -131,7 +131,7 @@ def _get_active_profile_name() -> str:
     same process don't retroactively relabel running containers.
     """
     try:
-        from hermes_cli.profiles import get_active_profile_name
+        from papylonation_cli.profiles import get_active_profile_name
 
         return get_active_profile_name() or "default"
     except Exception:
@@ -1036,16 +1036,16 @@ class DockerEnvironment(BaseEnvironment):
         # win over the generic Hermes secret blocklist. Only implicit passthrough
         # keys are filtered. Also strip Hermes-internal dynamic secrets
         # (AUXILIARY_*_API_KEY / _BASE_URL, GATEWAY_RELAY_* auth) that the
-        # name-based blocklist doesn't cover — see _is_hermes_internal_secret.
+        # name-based blocklist doesn't cover — see _is_papylonation_internal_secret.
         _implicit_forward = {
-            k for k in passthrough_keys if not _is_hermes_internal_secret(k)
+            k for k in passthrough_keys if not _is_papylonation_internal_secret(k)
         }
         forward_keys = explicit_forward_keys | (_implicit_forward - _HERMES_PROVIDER_ENV_BLOCKLIST)
-        hermes_env = _load_hermes_env_vars() if forward_keys else {}
+        papylonation_env = _load_papylonation_env_vars() if forward_keys else {}
         for key in sorted(forward_keys):
             value = os.getenv(key)
             if not value:
-                value = hermes_env.get(key)
+                value = papylonation_env.get(key)
             if value:
                 exec_env[key] = value
 

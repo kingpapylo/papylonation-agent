@@ -77,7 +77,7 @@ class CachedFetch:
 def resolve_cache_home(home_path: Optional[Path] = None) -> Path:
     """Resolve the Hermes home used for cache paths.
 
-    ``home_path`` is whatever ``load_hermes_dotenv()`` already resolved;
+    ``home_path`` is whatever ``load_papylonation_dotenv()`` already resolved;
     falling back to ``$HERMES_HOME`` / ``~/.hermes`` keeps direct callers
     (and tests that don't thread a home through) working.
     """
@@ -92,7 +92,7 @@ K = TypeVar("K")
 class DiskCache(Generic[K]):
     """Best-effort, profile-aware on-disk cache for fetched secret values.
 
-    One JSON object per backend lives at ``<hermes_home>/cache/<basename>``::
+    One JSON object per backend lives at ``<papylonation_home>/cache/<basename>``::
 
         {"key": "<serialized cache key>", "secrets": {...}, "fetched_at": 1.0}
 

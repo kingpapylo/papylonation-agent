@@ -330,7 +330,7 @@ class TestBlocklistCoverage:
         CLAUDE_CODE_OAUTH_TOKEN is the one deliberate exemption: it is owned
         by the user's Claude Code install, not Hermes (#55878).
         """
-        from hermes_cli.auth import PROVIDER_REGISTRY
+        from papylonation_cli.auth import PROVIDER_REGISTRY
 
         exempt = {"CLAUDE_CODE_OAUTH_TOKEN"}
         for pconfig in PROVIDER_REGISTRY.values():
@@ -407,7 +407,7 @@ class TestBlocklistCoverage:
 
     def test_optional_tool_and_messaging_vars_are_in_blocklist(self):
         """Tool/messaging vars from OPTIONAL_ENV_VARS should stay covered."""
-        from hermes_cli.config import OPTIONAL_ENV_VARS
+        from papylonation_cli.config import OPTIONAL_ENV_VARS
 
         for name, metadata in OPTIONAL_ENV_VARS.items():
             category = metadata.get("category")
@@ -467,7 +467,7 @@ class TestSanePathIncludesHomebrew:
     """Verify _SANE_PATH includes macOS Homebrew directories."""
 
     @pytest.fixture(autouse=True)
-    def _disable_hermes_bin_injection(self):
+    def _disable_papylonation_bin_injection(self):
         """These tests assert the sane-path merge in isolation. Disable the
         hermes-install-dir prepend (a separate concern, covered by
         TestHermesBinDirOnPath) so a real ``hermes`` on the test runner's PATH
@@ -578,7 +578,7 @@ class TestHermesBinDirOnPath:
     Plugins shelling out to bare ``hermes`` via the terminal tool must work
     even when the gateway was launched without the hermes install dir on
     PATH (systemd, service managers, cron). See the discussion that motivated
-    _resolve_hermes_bin_dir / _prepend_hermes_bin_dir.
+    _resolve_papylonation_bin_dir / _prepend_papylonation_bin_dir.
     """
 
     def _reset_cache(self):
@@ -591,7 +591,7 @@ class TestHermesBinDirOnPath:
         monkeypatch.setattr(local_mod.shutil, "which",
                             lambda name: "/opt/hermes/bin/hermes" if name == "hermes" else None)
         monkeypatch.setattr(local_mod.os.path, "isdir", lambda p: p == "/opt/hermes/bin")
-        assert local_mod._resolve_hermes_bin_dir() == "/opt/hermes/bin"
+        assert local_mod._resolve_papylonation_bin_dir() == "/opt/hermes/bin"
 
     def test_resolves_via_sys_executable_dir(self, monkeypatch, tmp_path):
         from tools.environments import local as local_mod
@@ -603,7 +603,7 @@ class TestHermesBinDirOnPath:
         monkeypatch.setattr(local_mod.sys, "argv", ["python"])
         monkeypatch.setattr(local_mod.sys, "executable", str(venv_bin / "python"))
         monkeypatch.setattr(local_mod, "_IS_WINDOWS", False)
-        assert local_mod._resolve_hermes_bin_dir() == str(venv_bin)
+        assert local_mod._resolve_papylonation_bin_dir() == str(venv_bin)
 
     def test_returns_none_when_unresolvable(self, monkeypatch):
         from tools.environments import local as local_mod
@@ -611,13 +611,13 @@ class TestHermesBinDirOnPath:
         monkeypatch.setattr(local_mod.shutil, "which", lambda name: None)
         monkeypatch.setattr(local_mod.sys, "argv", ["python"])
         monkeypatch.setattr(local_mod.sys, "executable", "/nonexistent/python")
-        assert local_mod._resolve_hermes_bin_dir() is None
+        assert local_mod._resolve_papylonation_bin_dir() is None
 
     def test_prepend_adds_missing_dir_at_front(self, monkeypatch):
         from tools.environments import local as local_mod
         self._reset_cache()
         local_mod._HERMES_BIN_DIR = "/opt/hermes/bin"
-        out = local_mod._prepend_hermes_bin_dir("/usr/bin:/bin")
+        out = local_mod._prepend_papylonation_bin_dir("/usr/bin:/bin")
         assert out.split(os.pathsep)[0] == "/opt/hermes/bin"
         assert "/usr/bin" in out.split(os.pathsep)
 
@@ -625,8 +625,8 @@ class TestHermesBinDirOnPath:
         from tools.environments import local as local_mod
         self._reset_cache()
         local_mod._HERMES_BIN_DIR = "/opt/hermes/bin"
-        once = local_mod._prepend_hermes_bin_dir("/usr/bin:/bin")
-        twice = local_mod._prepend_hermes_bin_dir(once)
+        once = local_mod._prepend_papylonation_bin_dir("/usr/bin:/bin")
+        twice = local_mod._prepend_papylonation_bin_dir(once)
         assert twice == once
         assert once.split(os.pathsep).count("/opt/hermes/bin") == 1
 
@@ -634,9 +634,9 @@ class TestHermesBinDirOnPath:
         from tools.environments import local as local_mod
         self._reset_cache()
         local_mod._HERMES_BIN_DIR = None
-        assert local_mod._prepend_hermes_bin_dir("/usr/bin:/bin") == "/usr/bin:/bin"
+        assert local_mod._prepend_papylonation_bin_dir("/usr/bin:/bin") == "/usr/bin:/bin"
 
-    def test_make_run_env_injects_hermes_bin_dir(self, monkeypatch):
+    def test_make_run_env_injects_papylonation_bin_dir(self, monkeypatch):
         """A gateway env missing the hermes dir gets it back in the subshell PATH."""
         from tools.environments import local as local_mod
         from tools.environments.local import _make_run_env
@@ -663,43 +663,43 @@ class TestHermesInternalDynamicSecrets:
     - ``GATEWAY_RELAY_*_SECRET`` / ``_KEY`` / ``_TOKEN`` — relay-auth material
       provisioned by ``gateway/relay``.
 
-    ``_is_hermes_internal_secret`` is the single source of truth; every spawn
+    ``_is_papylonation_internal_secret`` is the single source of truth; every spawn
     path (``_sanitize_subprocess_env``, ``_make_run_env``,
-    ``hermes_subprocess_env``, Docker forward filter, ``env_passthrough``)
+    ``papylonation_subprocess_env``, Docker forward filter, ``env_passthrough``)
     consults it. These tests exercise the terminal execute path + predicate.
     """
 
     def test_predicate_matches_auxiliary_api_key(self):
-        from tools.environments.local import _is_hermes_internal_secret
-        assert _is_hermes_internal_secret("AUXILIARY_VISION_API_KEY")
-        assert _is_hermes_internal_secret("AUXILIARY_WEB_EXTRACT_API_KEY")
-        assert _is_hermes_internal_secret("AUXILIARY_APPROVAL_API_KEY")
+        from tools.environments.local import _is_papylonation_internal_secret
+        assert _is_papylonation_internal_secret("AUXILIARY_VISION_API_KEY")
+        assert _is_papylonation_internal_secret("AUXILIARY_WEB_EXTRACT_API_KEY")
+        assert _is_papylonation_internal_secret("AUXILIARY_APPROVAL_API_KEY")
         # plugin-registered task names are covered by the pattern
-        assert _is_hermes_internal_secret("AUXILIARY_MY_PLUGIN_TASK_API_KEY")
+        assert _is_papylonation_internal_secret("AUXILIARY_MY_PLUGIN_TASK_API_KEY")
 
     def test_predicate_matches_auxiliary_base_url(self):
-        from tools.environments.local import _is_hermes_internal_secret
-        assert _is_hermes_internal_secret("AUXILIARY_VISION_BASE_URL")
-        assert _is_hermes_internal_secret("AUXILIARY_COMPRESSION_BASE_URL")
+        from tools.environments.local import _is_papylonation_internal_secret
+        assert _is_papylonation_internal_secret("AUXILIARY_VISION_BASE_URL")
+        assert _is_papylonation_internal_secret("AUXILIARY_COMPRESSION_BASE_URL")
 
     def test_predicate_matches_gateway_relay_auth(self):
-        from tools.environments.local import _is_hermes_internal_secret
-        assert _is_hermes_internal_secret("GATEWAY_RELAY_SECRET")
-        assert _is_hermes_internal_secret("GATEWAY_RELAY_DELIVERY_KEY")
-        assert _is_hermes_internal_secret("GATEWAY_RELAY_SESSION_TOKEN")
+        from tools.environments.local import _is_papylonation_internal_secret
+        assert _is_papylonation_internal_secret("GATEWAY_RELAY_SECRET")
+        assert _is_papylonation_internal_secret("GATEWAY_RELAY_DELIVERY_KEY")
+        assert _is_papylonation_internal_secret("GATEWAY_RELAY_SESSION_TOKEN")
 
     def test_predicate_allows_auxiliary_non_secrets(self):
         """AUXILIARY_*_PROVIDER / _MODEL and GATEWAY_RELAY_* routing hints are
         NOT secrets and must remain visible so tooling that reads them works."""
-        from tools.environments.local import _is_hermes_internal_secret
-        assert not _is_hermes_internal_secret("AUXILIARY_VISION_PROVIDER")
-        assert not _is_hermes_internal_secret("AUXILIARY_VISION_MODEL")
-        assert not _is_hermes_internal_secret("GATEWAY_RELAY_URL")
-        assert not _is_hermes_internal_secret("GATEWAY_RELAY_PLATFORMS")
-        assert not _is_hermes_internal_secret("GATEWAY_RELAY_ID")  # not a secret suffix
+        from tools.environments.local import _is_papylonation_internal_secret
+        assert not _is_papylonation_internal_secret("AUXILIARY_VISION_PROVIDER")
+        assert not _is_papylonation_internal_secret("AUXILIARY_VISION_MODEL")
+        assert not _is_papylonation_internal_secret("GATEWAY_RELAY_URL")
+        assert not _is_papylonation_internal_secret("GATEWAY_RELAY_PLATFORMS")
+        assert not _is_papylonation_internal_secret("GATEWAY_RELAY_ID")  # not a secret suffix
         # unrelated vars pass through
-        assert not _is_hermes_internal_secret("PATH")
-        assert not _is_hermes_internal_secret("MY_APP_KEY")
+        assert not _is_papylonation_internal_secret("PATH")
+        assert not _is_papylonation_internal_secret("MY_APP_KEY")
 
     def test_auxiliary_secrets_stripped_from_subprocess(self):
         """AUXILIARY_*_API_KEY / _BASE_URL injected into os.environ must not

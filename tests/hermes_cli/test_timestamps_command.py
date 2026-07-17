@@ -14,7 +14,7 @@ from datetime import datetime
 
 import yaml
 
-from hermes_cli.cli_commands_mixin import CLICommandsMixin
+from papylonation_cli.cli_commands_mixin import CLICommandsMixin
 
 
 class _Stub(CLICommandsMixin):
@@ -29,7 +29,7 @@ def _seed(tmp_path, monkeypatch, value=False):
     monkeypatch.setenv("HERMES_HOME", str(hh))
     import cli
 
-    monkeypatch.setattr(cli, "_hermes_home", hh, raising=False)
+    monkeypatch.setattr(cli, "_papylonation_home", hh, raising=False)
     return hh
 
 

@@ -54,7 +54,7 @@ def _wait_for_cont_init(container: str) -> None:
 
     The reliable "cont-init is done" signal is
     ``$HERMES_HOME/logs/container-boot.log``: it is written by
-    ``02-reconcile-profiles`` (hermes_cli.container_boot), which s6 runs
+    ``02-reconcile-profiles`` (papylonation_cli.container_boot), which s6 runs
     *strictly after* ``01-hermes-setup`` in lexicographic order. The
     reconciler always logs at least one ``profile=default`` line even for a
     bare ``sleep infinity`` container, so once that marker appears every
@@ -103,7 +103,7 @@ def sleep_container(built_image: str, container_name: str) -> Iterator[str]:
         )
 
 
-def test_shim_drops_root_to_hermes_uid(sleep_container: str) -> None:
+def test_shim_drops_root_to_papylonation_uid(sleep_container: str) -> None:
     """docker exec defaults to root; the shim should drop to uid 10000.
 
     We invoke `hermes` with a Python-style `-c` shim equivalent — there's no

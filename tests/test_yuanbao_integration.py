@@ -112,9 +112,9 @@ class TestGatewayRunnerRegistration:
         # Stub out heavy dependencies if not already present
         stubs = [
             "dotenv",
-            "hermes_cli.env_loader",
-            "hermes_cli.config",
-            "hermes_constants",
+            "papylonation_cli.env_loader",
+            "papylonation_cli.config",
+            "papylonation_constants",
         ]
         _orig = {}
         for mod in stubs:

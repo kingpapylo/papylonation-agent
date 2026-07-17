@@ -61,7 +61,7 @@ def provider(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "test-key")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("session-1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("session-1", papylonation_home=str(tmp_path), platform="cli")
     return p
 
 
@@ -325,8 +325,8 @@ def test_identity_template_resolved_in_container_tag(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"container_tag": "hermes-{identity}"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli", agent_identity="coder")
-    assert p._container_tag == "hermes_coder"
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli", agent_identity="coder")
+    assert p._container_tag == "papylonation_coder"
 
 
 def test_identity_template_default_profile(monkeypatch, tmp_path):
@@ -335,8 +335,8 @@ def test_identity_template_default_profile(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"container_tag": "hermes-{identity}"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
-    assert p._container_tag == "hermes_default"
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
+    assert p._container_tag == "papylonation_default"
 
 
 def test_container_tag_env_var_override(monkeypatch, tmp_path):
@@ -345,7 +345,7 @@ def test_container_tag_env_var_override(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_CONTAINER_TAG", "env-override")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     assert p._container_tag == "env_override"
 
 
@@ -358,7 +358,7 @@ def test_search_mode_config_passed_to_client(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"search_mode": "memories"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     assert p._search_mode == "memories"
     assert p._client.search_mode == "memories"
 
@@ -369,7 +369,7 @@ def test_invalid_search_mode_falls_back_to_default(monkeypatch, tmp_path):
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     _save_supermemory_config({"search_mode": "invalid_mode"}, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     assert p._search_mode == "hybrid"
 
 
@@ -393,7 +393,7 @@ def test_multi_container_enabled_adds_schema_param(monkeypatch, tmp_path):
         "custom_containers": ["project-alpha", "shared"],
     }, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     assert p._enable_custom_containers is True
     assert p._allowed_containers == ["hermes", "project_alpha", "shared"]
     schemas = p.get_tool_schemas()
@@ -410,7 +410,7 @@ def test_multi_container_tool_store_with_custom_tag(monkeypatch, tmp_path):
         "custom_containers": ["project-alpha"],
     }, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     result = json.loads(p.handle_tool_call("supermemory_store", {
         "content": "test memory",
         "container_tag": "project-alpha",
@@ -429,7 +429,7 @@ def test_multi_container_rejects_unlisted_tag(monkeypatch, tmp_path):
         "custom_containers": ["allowed-tag"],
     }, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     result = json.loads(p.handle_tool_call("supermemory_store", {
         "content": "test",
         "container_tag": "forbidden-tag",
@@ -448,7 +448,7 @@ def test_multi_container_system_prompt_includes_instructions(monkeypatch, tmp_pa
         "custom_container_instructions": "Use docs for documentation context.",
     }, str(tmp_path))
     p = SupermemoryMemoryProvider()
-    p.initialize("s1", hermes_home=str(tmp_path), platform="cli")
+    p.initialize("s1", papylonation_home=str(tmp_path), platform="cli")
     block = p.system_prompt_block()
     assert "Multi-container mode enabled" in block
     assert "docs" in block
@@ -467,13 +467,13 @@ def test_get_config_schema_minimal():
 def test_format_connection_summary_ok():
     summary = _format_connection_summary({
         "ok": True,
-        "container_tag": "hermes_coder",
+        "container_tag": "papylonation_coder",
         "profile_facts": 12,
         "auto_recall": True,
         "auto_capture": False,
     })
     assert "✓ Connected" in summary
-    assert "container: hermes_coder" in summary
+    assert "container: papylonation_coder" in summary
     assert "12 profile facts" in summary
     assert "auto_recall on" in summary
     assert "auto_capture off" in summary
@@ -568,7 +568,7 @@ def test_get_status_config_returns_summary(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "test-key")
     monkeypatch.setattr("plugins.memory.supermemory._SupermemoryClient", FakeClient)
     monkeypatch.setattr(
-        "hermes_constants.get_hermes_home",
+        "papylonation_constants.get_papylonation_home",
         lambda: tmp_path,
     )
     result = SupermemoryMemoryProvider().get_status_config({})
@@ -581,12 +581,12 @@ def test_post_setup_writes_config_and_prints_summary(monkeypatch, tmp_path, caps
     config: dict = {"memory": {}}
     monkeypatch.setenv("SUPERMEMORY_API_KEY", "")
     monkeypatch.setattr(
-        "hermes_cli.memory_setup._prompt",
+        "papylonation_cli.memory_setup._prompt",
         lambda label, secret=True, default=None: "new-api-key",
     )
     monkeypatch.setattr(
         "plugins.memory.supermemory._probe_supermemory_connection",
-        lambda api_key, hermes_home, **kwargs: {
+        lambda api_key, papylonation_home, **kwargs: {
             "ok": True,
             "container_tag": "hermes",
             "profile_facts": 3,
@@ -600,7 +600,7 @@ def test_post_setup_writes_config_and_prints_summary(monkeypatch, tmp_path, caps
     def fake_save_config(cfg):
         saved.update(cfg)
 
-    monkeypatch.setattr("hermes_cli.config.save_config", fake_save_config)
+    monkeypatch.setattr("papylonation_cli.config.save_config", fake_save_config)
 
     SupermemoryMemoryProvider().post_setup(str(tmp_path), config)
 

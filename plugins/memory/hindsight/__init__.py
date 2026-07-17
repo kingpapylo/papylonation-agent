@@ -44,9 +44,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from agent.memory_provider import MemoryProvider
-from hermes_constants import get_hermes_home
+from papylonation_constants import get_papylonation_home
 from tools.registry import tool_error
-from hermes_cli.config import cfg_get
+from papylonation_cli.config import cfg_get
 
 logger = logging.getLogger(__name__)
 
@@ -357,7 +357,7 @@ def _load_config() -> dict:
     from pathlib import Path
 
     # Profile-scoped path (preferred)
-    profile_path = get_hermes_home() / "hindsight" / "config.json"
+    profile_path = get_papylonation_home() / "hindsight" / "config.json"
     if profile_path.exists():
         try:
             return json.loads(profile_path.read_text(encoding="utf-8"))
@@ -736,11 +736,11 @@ class HindsightMemoryProvider(MemoryProvider):
         except Exception:
             return False
 
-    def save_config(self, values, hermes_home):
+    def save_config(self, values, papylonation_home):
         """Write config to $HERMES_HOME/hindsight/config.json."""
         import json
         from pathlib import Path
-        config_dir = Path(hermes_home) / "hindsight"
+        config_dir = Path(papylonation_home) / "hindsight"
         config_dir.mkdir(parents=True, exist_ok=True)
         config_path = config_dir / "config.json"
         existing = {}
@@ -753,17 +753,17 @@ class HindsightMemoryProvider(MemoryProvider):
         from utils import atomic_json_write
         atomic_json_write(config_path, existing, mode=0o600)
 
-    def post_setup(self, hermes_home: str, config: dict) -> None:
+    def post_setup(self, papylonation_home: str, config: dict) -> None:
         """Custom setup wizard — installs only the deps needed for the selected mode."""
         import subprocess
         import shutil
         import sys
         from pathlib import Path
 
-        from hermes_cli.config import save_config
-        from hermes_cli.secret_prompt import masked_secret_prompt
+        from papylonation_cli.config import save_config
+        from papylonation_cli.secret_prompt import masked_secret_prompt
 
-        from hermes_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup
+        from papylonation_cli.memory_setup import _CANCELLED, _curses_select, _print_cancelled_setup
 
         print("\n  Configuring Hindsight memory:\n")
 
@@ -892,7 +892,7 @@ class HindsightMemoryProvider(MemoryProvider):
             if llm_key:
                 env_writes["HINDSIGHT_LLM_API_KEY"] = llm_key
             else:
-                env_path = Path(hermes_home) / ".env"
+                env_path = Path(papylonation_home) / ".env"
                 existing_llm_key = ""
                 if env_path.exists():
                     for line in env_path.read_text().splitlines():
@@ -918,10 +918,10 @@ class HindsightMemoryProvider(MemoryProvider):
         config["memory"]["provider"] = "hindsight"
         save_config(config)
 
-        self.save_config(provider_config, hermes_home)
+        self.save_config(provider_config, papylonation_home)
 
         if env_writes:
-            env_path = Path(hermes_home) / ".env"
+            env_path = Path(papylonation_home) / ".env"
             env_path.parent.mkdir(parents=True, exist_ok=True)
             existing_lines = []
             if env_path.exists():
@@ -942,7 +942,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
         if mode == "local_embedded":
             materialized_config = dict(provider_config)
-            config_path = Path(hermes_home) / "hindsight" / "config.json"
+            config_path = Path(papylonation_home) / "hindsight" / "config.json"
             try:
                 materialized_config = json.loads(config_path.read_text(encoding="utf-8"))
             except Exception:
@@ -950,7 +950,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
             llm_api_key = env_writes.get("HINDSIGHT_LLM_API_KEY", "")
             if not llm_api_key:
-                llm_api_key = _load_simple_env(Path(hermes_home) / ".env").get("HINDSIGHT_LLM_API_KEY", "")
+                llm_api_key = _load_simple_env(Path(papylonation_home) / ".env").get("HINDSIGHT_LLM_API_KEY", "")
             if not llm_api_key:
                 llm_api_key = _load_simple_env(_embedded_profile_env_path(materialized_config)).get(
                     "HINDSIGHT_API_LLM_API_KEY",
@@ -1401,7 +1401,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
             def _start_daemon():
                 import traceback
-                log_dir = get_hermes_home() / "logs"
+                log_dir = get_papylonation_home() / "logs"
                 log_dir.mkdir(parents=True, exist_ok=True)
                 log_path = log_dir / "hindsight-embed.log"
                 try:

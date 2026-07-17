@@ -22,7 +22,7 @@ import threading
 import time
 import unicodedata
 from typing import Optional
-from hermes_cli.config import cfg_get
+from papylonation_cli.config import cfg_get
 
 from tools.interrupt import is_interrupted
 from utils import env_var_enabled, is_truthy_value
@@ -60,25 +60,25 @@ _approval_tool_call_id: contextvars.ContextVar[str] = contextvars.ContextVar(
 # thread/task-local, so each executor worker (or asyncio task) sees only its
 # own value. None = unset → fall back to the env var for legacy
 # single-threaded CLI callers that still export HERMES_INTERACTIVE.
-_hermes_interactive_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
-    "hermes_interactive",
+_papylonation_interactive_ctx: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "papylonation_interactive",
     default=None,
 )
 
 
-def set_hermes_interactive_context(interactive: bool) -> contextvars.Token:
+def set_papylonation_interactive_context(interactive: bool) -> contextvars.Token:
     """Bind interactive mode for the current context (thread or asyncio task).
 
     Use this instead of mutating ``os.environ["HERMES_INTERACTIVE"]`` from
     concurrent executor threads. When unset (default), interactive detection
     falls back to the ``HERMES_INTERACTIVE`` env var for legacy callers.
     """
-    return _hermes_interactive_ctx.set("1" if interactive else "")
+    return _papylonation_interactive_ctx.set("1" if interactive else "")
 
 
-def reset_hermes_interactive_context(token: contextvars.Token) -> None:
-    """Restore the prior value from :func:`set_hermes_interactive_context`."""
-    _hermes_interactive_ctx.reset(token)
+def reset_papylonation_interactive_context(token: contextvars.Token) -> None:
+    """Restore the prior value from :func:`set_papylonation_interactive_context`."""
+    _papylonation_interactive_ctx.reset(token)
 
 
 def _is_interactive_cli() -> bool:
@@ -87,7 +87,7 @@ def _is_interactive_cli() -> bool:
     Prefers the context-local flag (set by concurrent ACP sessions) and falls
     back to the ``HERMES_INTERACTIVE`` env var for single-threaded callers.
     """
-    ctx_val = _hermes_interactive_ctx.get()
+    ctx_val = _papylonation_interactive_ctx.get()
     if ctx_val is not None:
         return is_truthy_value(ctx_val)
     return env_var_enabled("HERMES_INTERACTIVE")
@@ -104,7 +104,7 @@ def _fire_approval_hook(hook_name: str, **kwargs) -> None:
     pre_approval_request, post_approval_response.
     """
     try:
-        from hermes_cli.plugins import invoke_hook
+        from papylonation_cli.plugins import invoke_hook
     except Exception:
         # Plugin system not available in this execution context
         # (e.g. bare tool-only imports, minimal test environments).
@@ -256,7 +256,7 @@ _SSH_SENSITIVE_PATH = r'(?:~|\$home|\$\{home\})/\.ssh(?:/|$)'
 _HERMES_ENV_PATH = (
     r'(?:~\/\.hermes/|'
     r'(?:\$home|\$\{home\})/\.hermes/|'
-    r'(?:\$hermes_home|\$\{hermes_home\})/)'
+    r'(?:\$papylonation_home|\$\{papylonation_home\})/)'
     r'\.env\b'
 )
 # ~/.hermes/config.yaml IS the security policy: approvals.mode, yolo, and the
@@ -270,7 +270,7 @@ _HERMES_ENV_PATH = (
 _HERMES_CONFIG_PATH = (
     r'(?:~\/\.hermes/|'
     r'(?:\$home|\$\{home\})/\.hermes/|'
-    r'(?:\$hermes_home|\$\{hermes_home\})/)'
+    r'(?:\$papylonation_home|\$\{papylonation_home\})/)'
     r'config\.yaml\b'
 )
 _PROJECT_ENV_PATH = r'(?:(?:/|\.{1,2}/)?(?:[^\s/"\'`]+/)*\.env(?:\.[^/\s"\'`]+)*)'
@@ -903,7 +903,7 @@ def _normalize_command_for_detection(command: str) -> str:
     # Fold the (more specific) Hermes home first: on Windows it nests under the
     # user home (C:\Users\alice\AppData\...\hermes), so folding the user home
     # first would eat the prefix the Hermes-home fold needs.
-    command = _rewrite_resolved_hermes_home(command)
+    command = _rewrite_resolved_papylonation_home(command)
     command = _rewrite_resolved_user_home(command)
     # Strip shell backslash-escapes: r\m → rm. Prevents \-injection bypass.
     command = re.sub(r'\\([^\n])', r'\1', command)
@@ -1008,7 +1008,7 @@ def _rewrite_resolved_user_home(command: str) -> str:
     return _fold_home_prefixes(command, candidates, "~")
 
 
-def _rewrite_resolved_hermes_home(command: str) -> str:
+def _rewrite_resolved_papylonation_home(command: str) -> str:
     """Rewrite the resolved absolute Hermes home prefix to ``~/.hermes/``.
 
     Resolves the active ``HERMES_HOME`` at call time (and its symlink-resolved
@@ -1021,8 +1021,8 @@ def _rewrite_resolved_hermes_home(command: str) -> str:
     path can't be resolved or doesn't appear.
     """
     try:
-        from hermes_constants import get_hermes_home
-        home = get_hermes_home().expanduser()
+        from papylonation_constants import get_papylonation_home
+        home = get_papylonation_home().expanduser()
         candidates = [
             str(home),
             str(home.resolve(strict=False)),
@@ -2244,7 +2244,7 @@ def load_permanent_allowlist() -> set:
     patterns added via 'always' in a previous session.
     """
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
         config = load_config()
         patterns = set(config.get("command_allowlist", []) or [])
         if patterns:
@@ -2258,7 +2258,7 @@ def load_permanent_allowlist() -> set:
 def save_permanent_allowlist(patterns: set):
     """Save permanently allowed command patterns to config."""
     try:
-        from hermes_cli.config import load_config, save_config
+        from papylonation_cli.config import load_config, save_config
         config = load_config()
         config["command_allowlist"] = list(patterns)
         save_config(config)
@@ -2455,7 +2455,7 @@ def _normalize_approval_mode(mode) -> str:
 def _get_approval_config() -> dict:
     """Read the approvals config block. Returns a dict with 'mode', 'timeout', etc."""
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
         config = load_config()
         return config.get("approvals", {}) or {}
     except Exception as e:
@@ -2501,7 +2501,7 @@ def _get_approval_timeout() -> int:
 def _get_cron_approval_mode() -> str:
     """Read the cron approval mode from config. Returns 'deny' or 'approve'."""
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
         config = load_config()
         mode = str(cfg_get(config, "approvals", "cron_mode", default="deny")).lower().strip()
         if mode in {"approve", "off", "allow", "yes"}:
@@ -3278,7 +3278,7 @@ def check_all_command_guards(command: str, env_type: str,
                     # fail-closed synthesis in the main flow below; see #20733).
                     _cron_fail_open = True  # safe default if config is unreadable
                     try:
-                        from hermes_cli.config import load_config as _load_cfg
+                        from papylonation_cli.config import load_config as _load_cfg
                         _sec = (_load_cfg() or {}).get("security", {}) or {}
                         if _sec.get("tirith_enabled", True):
                             _cron_fail_open = _sec.get("tirith_fail_open", True)
@@ -3316,7 +3316,7 @@ def check_all_command_guards(command: str, env_type: str,
         # normal approval flow.  Fixes #20733.
         _tirith_fail_open = True  # safe default if config is unreadable
         try:
-            from hermes_cli.config import load_config as _load_cfg
+            from papylonation_cli.config import load_config as _load_cfg
             _sec = (_load_cfg() or {}).get("security", {}) or {}
             _tirith_enabled = _sec.get("tirith_enabled", True)
             if _tirith_enabled:

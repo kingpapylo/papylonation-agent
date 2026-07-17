@@ -1,7 +1,7 @@
 """Tests for the ``hermes send`` CLI subcommand.
 
 Covers the argument parsing / stdin / file / list behavior of
-``hermes_cli.send_cmd``. The underlying ``send_message_tool`` is stubbed so
+``papylonation_cli.send_cmd``. The underlying ``send_message_tool`` is stubbed so
 no network I/O or gateway is required.
 """
 
@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from hermes_cli import send_cmd
+from papylonation_cli import send_cmd
 
 
 # ---------------------------------------------------------------------------
@@ -333,7 +333,7 @@ def test_register_send_subparser_is_reusable():
 # ---------------------------------------------------------------------------
 
 
-def test_load_hermes_env_bridges_config_yaml_scalars(tmp_path, monkeypatch):
+def test_load_papylonation_env_bridges_config_yaml_scalars(tmp_path, monkeypatch):
     """Top-level config.yaml scalars should be bridged into os.environ.
 
     This mirrors the gateway/run.py bootstrap behavior: without this, running
@@ -344,58 +344,58 @@ def test_load_hermes_env_bridges_config_yaml_scalars(tmp_path, monkeypatch):
     """
     import os
 
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    (hermes_home / ".env").write_text("SOME_TOKEN=abc123\n")
-    (hermes_home / "config.yaml").write_text(
+    papylonation_home = tmp_path / ".hermes"
+    papylonation_home.mkdir()
+    (papylonation_home / ".env").write_text("SOME_TOKEN=abc123\n")
+    (papylonation_home / "config.yaml").write_text(
         "TELEGRAM_HOME_CHANNEL: '5550001111'\nnested:\n  ignored: true\n"
     )
 
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
     monkeypatch.delenv("TELEGRAM_HOME_CHANNEL", raising=False)
     monkeypatch.delenv("SOME_TOKEN", raising=False)
 
-    # Force get_hermes_home() to re-resolve under the patched env.
+    # Force get_papylonation_home() to re-resolve under the patched env.
     from importlib import reload
 
-    import hermes_cli.config as _hc_config
+    import papylonation_cli.config as _hc_config
     reload(_hc_config)
 
-    send_cmd._load_hermes_env()
+    send_cmd._load_papylonation_env()
 
     assert os.environ.get("SOME_TOKEN") == "abc123"
     assert os.environ.get("TELEGRAM_HOME_CHANNEL") == "5550001111"
 
 
-def test_load_hermes_env_does_not_override_existing(tmp_path, monkeypatch):
+def test_load_papylonation_env_does_not_override_existing(tmp_path, monkeypatch):
     """Existing env vars must not be clobbered by config.yaml values."""
     import os
 
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    (hermes_home / "config.yaml").write_text("TELEGRAM_HOME_CHANNEL: yaml_value\n")
+    papylonation_home = tmp_path / ".hermes"
+    papylonation_home.mkdir()
+    (papylonation_home / "config.yaml").write_text("TELEGRAM_HOME_CHANNEL: yaml_value\n")
 
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
     monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "env_value")
 
     from importlib import reload
-    import hermes_cli.config as _hc_config
+    import papylonation_cli.config as _hc_config
     reload(_hc_config)
 
-    send_cmd._load_hermes_env()
+    send_cmd._load_papylonation_env()
 
     assert os.environ.get("TELEGRAM_HOME_CHANNEL") == "env_value"
 
 
-def test_load_hermes_env_handles_missing_files(tmp_path, monkeypatch):
+def test_load_papylonation_env_handles_missing_files(tmp_path, monkeypatch):
     """No .env or config.yaml should be a silent no-op, not an exception."""
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    papylonation_home = tmp_path / ".hermes"
+    papylonation_home.mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
 
     from importlib import reload
-    import hermes_cli.config as _hc_config
+    import papylonation_cli.config as _hc_config
     reload(_hc_config)
 
     # Should not raise.
-    send_cmd._load_hermes_env()
+    send_cmd._load_papylonation_env()

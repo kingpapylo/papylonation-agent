@@ -502,12 +502,12 @@ def test_user_agent_contains_version():
     assert f"hermes-agent/{_HERMES_VERSION}" in headers["User-Agent"]
 
 
-def test_hermes_version_is_valid():
+def test_papylonation_version_is_valid():
     """_HERMES_VERSION should be a non-empty string."""
     from agent.gemini_native_adapter import _HERMES_VERSION
 
     assert isinstance(_HERMES_VERSION, str)
     assert len(_HERMES_VERSION) > 0
     assert _HERMES_VERSION != "0.0.0", (
-        "Version should resolve from hermes_cli.__version__, not the fallback"
+        "Version should resolve from papylonation_cli.__version__, not the fallback"
     )

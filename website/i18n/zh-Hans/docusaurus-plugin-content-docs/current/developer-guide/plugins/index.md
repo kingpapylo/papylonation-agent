@@ -1060,7 +1060,7 @@ tts:
 
 ```toml
 # pyproject.toml
-[project.entry-points."hermes_agent.plugins"]
+[project.entry-points."papylonation_agent.plugins"]
 my-plugin = "my_plugin_package"
 ```
 

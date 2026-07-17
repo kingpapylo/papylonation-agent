@@ -33,12 +33,12 @@ except ImportError:  # pragma: no cover - non-Windows
     msvcrt = None
 from datetime import datetime, timedelta
 from pathlib import Path
-from hermes_constants import get_hermes_home
+from papylonation_constants import get_papylonation_home
 from typing import Optional, Dict, List, Any, Set, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
-from hermes_time import now as _hermes_now
+from papylonation_time import now as _papylonation_now
 from utils import atomic_replace
 
 try:
@@ -56,14 +56,14 @@ except ImportError:
 # profile's jobs under that same HERMES_HOME — so a job authored in profile
 # `coder` lives in `~/.hermes/profiles/coder/cron/jobs.json` and executes with
 # `coder`'s `.env`, `config.yaml`, and skills. We deliberately anchor on
-# `get_hermes_home()` (the active profile home), NOT `get_default_hermes_root()`
+# `get_papylonation_home()` (the active profile home), NOT `get_default_papylonation_root()`
 # (the shared root). Anchoring at the root would funnel every profile's jobs
 # into one shared `jobs.json` and run them under whatever HERMES_HOME the
 # ticker process happens to have — leaking config/credentials/skills across
 # profiles (the security boundary #4707 was filed for). Do NOT change this to
 # the default root: that re-breaks per-profile isolation. See also the dynamic
-# `_get_hermes_home()` / `_get_lock_paths()` resolution in cron/scheduler.py.
-HERMES_DIR = get_hermes_home().resolve()
+# `_get_papylonation_home()` / `_get_lock_paths()` resolution in cron/scheduler.py.
+HERMES_DIR = get_papylonation_home().resolve()
 # These constants remain the default-profile fallback and a compatibility
 # surface for existing callers/tests. Cross-profile callers must scope paths
 # with use_cron_store() instead of mutating them process-wide.
@@ -80,7 +80,7 @@ TICKER_HEARTBEAT_FILE = CRON_DIR / "ticker_heartbeat"
 TICKER_SUCCESS_FILE = CRON_DIR / "ticker_last_success"
 # Default ticker loop interval (seconds). The single source of truth shared by
 # the in-process ticker (cron/scheduler_provider.py) and the staleness
-# threshold in `hermes cron status` (hermes_cli/cron.py), so the two never
+# threshold in `hermes cron status` (papylonation_cli/cron.py), so the two never
 # drift apart.
 TICKER_INTERVAL_SECONDS = 60
 
@@ -131,7 +131,7 @@ def _current_cron_store() -> _CronStorePaths:
     2. deliberately re-pointed module constants — if CRON_DIR/JOBS_FILE/
        OUTPUT_DIR no longer match their import-time values, someone chose
        the documented process-wide compatibility surface; honor it;
-    3. the ACTIVE profile home, resolved fresh via get_hermes_home()
+    3. the ACTIVE profile home, resolved fresh via get_papylonation_home()
        (context-local override, then the HERMES_HOME env var) — so a test
        or embedder that re-points HERMES_HOME after this module was
        imported reads/writes ITS OWN store, not whatever jobs.json the
@@ -146,7 +146,7 @@ def _current_cron_store() -> _CronStorePaths:
     live_constants = _CronStorePaths(CRON_DIR, JOBS_FILE, OUTPUT_DIR)
     if live_constants != _IMPORT_STORE:
         return live_constants
-    home = get_hermes_home().resolve()
+    home = get_papylonation_home().resolve()
     if home == HERMES_DIR:
         return live_constants
     cron_dir = home / "cron"
@@ -570,7 +570,7 @@ def parse_schedule(schedule: str) -> Dict[str, Any]:
             #
             # Anchor to the CONFIGURED Hermes timezone, not the server's local
             # timezone. The due-check (`get_due_jobs`) compares `next_run_at`
-            # against `hermes_time.now()`, which uses the configured zone. If a
+            # against `papylonation_time.now()`, which uses the configured zone. If a
             # naive "20:07" were interpreted as server-local (e.g. UTC) while
             # now() runs in Asia/Kolkata, the stored instant would land hours
             # off from the user's wall-clock intent — far enough that one-shots
@@ -578,8 +578,8 @@ def parse_schedule(schedule: str) -> Dict[str, Any]:
             # the configured zone makes "20:07" mean 20:07 on the same clock the
             # scheduler checks against (#51021).
             if dt.tzinfo is None:
-                hermes_tz = _hermes_now().tzinfo
-                dt = dt.replace(tzinfo=hermes_tz)
+                papylonation_tz = _papylonation_now().tzinfo
+                dt = dt.replace(tzinfo=papylonation_tz)
             return {
                 "kind": "once",
                 "run_at": dt.isoformat(),
@@ -591,7 +591,7 @@ def parse_schedule(schedule: str) -> Dict[str, Any]:
     # Duration like "30m", "2h", "1d" → one-shot from now
     try:
         minutes = parse_duration(schedule)
-        run_at = _hermes_now() + timedelta(minutes=minutes)
+        run_at = _papylonation_now() + timedelta(minutes=minutes)
         return {
             "kind": "once",
             "run_at": run_at.isoformat(),
@@ -621,7 +621,7 @@ def _ensure_aware(dt: datetime) -> datetime:
     This preserves relative ordering for legacy naive timestamps across
     timezone changes and avoids false not-due results.
     """
-    target_tz = _hermes_now().tzinfo
+    target_tz = _papylonation_now().tzinfo
     if dt.tzinfo is None:
         local_tz = datetime.now().astimezone().tzinfo
         return dt.replace(tzinfo=local_tz).astimezone(target_tz)
@@ -704,7 +704,7 @@ def _compute_grace_seconds(schedule: dict) -> int:
         expr = schedule.get("expr")
         if expr:
             try:
-                now = _hermes_now()
+                now = _papylonation_now()
                 cron = croniter(expr, now)
                 first = cron.get_next(datetime)
                 second = cron.get_next(datetime)
@@ -723,7 +723,7 @@ def compute_next_run(schedule: Dict[str, Any], last_run_at: Optional[str] = None
 
     Returns ISO timestamp string, or None if no more runs.
     """
-    now = _hermes_now()
+    now = _papylonation_now()
 
     if not isinstance(schedule, dict):
         return None
@@ -911,7 +911,7 @@ def _save_jobs_unlocked(jobs: List[Dict[str, Any]]):
     fd, tmp_path = tempfile.mkstemp(dir=str(jobs_file.parent), suffix='.tmp', prefix='.jobs_')
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as f:
-            json.dump({"jobs": jobs, "updated_at": _hermes_now().isoformat()}, f, indent=2)
+            json.dump({"jobs": jobs, "updated_at": _papylonation_now().isoformat()}, f, indent=2)
             f.flush()
             os.fsync(f.fileno())
         atomic_replace(tmp_path, jobs_file)
@@ -977,15 +977,15 @@ def _resolve_default_model_snapshot() -> Optional[str]:
     """
     try:
         import yaml
-        from hermes_cli.config import _expand_env_vars
+        from papylonation_cli.config import _expand_env_vars
 
-        cfg_path = get_hermes_home() / "config.yaml"
+        cfg_path = get_papylonation_home() / "config.yaml"
         if not cfg_path.exists():
             return None
         with cfg_path.open(encoding="utf-8") as f:
             cfg = yaml.safe_load(f) or {}
         try:
-            from hermes_cli import managed_scope
+            from papylonation_cli import managed_scope
             cfg = managed_scope.apply_managed_overlay(cfg)
         except Exception:
             pass
@@ -1038,7 +1038,7 @@ def _compute_provider_model_snapshots(
     model_snapshot: Optional[str] = None
     if normalized_provider is None:
         try:
-            from hermes_cli.runtime_provider import resolve_runtime_provider
+            from papylonation_cli.runtime_provider import resolve_runtime_provider
 
             runtime_kwargs = {"requested": None}
             if normalized_base_url:
@@ -1147,7 +1147,7 @@ def create_job(
         deliver = "origin" if origin else "local"
 
     job_id = uuid.uuid4().hex[:12]
-    now = _hermes_now().isoformat()
+    now = _papylonation_now().isoformat()
 
     normalized_skills = _normalize_skill_list(skill, skills)
     normalized_model = _normalize_job_optional_text(model)
@@ -1438,7 +1438,7 @@ def pause_job(job_id: str, reason: Optional[str] = None) -> Optional[Dict[str, A
         {
             "enabled": False,
             "state": "paused",
-            "paused_at": _hermes_now().isoformat(),
+            "paused_at": _papylonation_now().isoformat(),
             "paused_reason": reason,
         },
     )
@@ -1481,7 +1481,7 @@ def trigger_job(job_id: str) -> Optional[Dict[str, Any]]:
             "state": "scheduled",
             "paused_at": None,
             "paused_reason": None,
-            "next_run_at": _hermes_now().isoformat(),
+            "next_run_at": _papylonation_now().isoformat(),
         },
     )
 
@@ -1524,7 +1524,7 @@ def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,
         jobs = load_jobs()
         for i, job in enumerate(jobs):
             if job["id"] == job_id:
-                now = _hermes_now().isoformat()
+                now = _papylonation_now().isoformat()
                 job["last_run_at"] = now
                 job["last_status"] = "ok" if success else "error"
                 job["last_error"] = error if not success else None
@@ -1693,7 +1693,7 @@ def heartbeat_run_claim(job_id: str, *, expected_owner: str) -> bool:
             claim = job.get("run_claim")
             if not isinstance(claim, dict) or claim.get("by") != expected_owner:
                 return False
-            claim["at"] = _hermes_now().isoformat()
+            claim["at"] = _papylonation_now().isoformat()
             save_jobs(jobs)
             return True
     return False
@@ -1718,7 +1718,7 @@ def advance_next_run(job_id: str) -> bool:
                 kind = job.get("schedule", {}).get("kind")
                 if kind not in {"cron", "interval"}:
                     return False
-                now = _hermes_now().isoformat()
+                now = _papylonation_now().isoformat()
                 new_next = compute_next_run(job["schedule"], now)
                 if new_next and new_next != job.get("next_run_at"):
                     job["next_run_at"] = new_next
@@ -1773,7 +1773,7 @@ def claim_job_for_fire(job_id: str, *, claim_ttl_seconds: int = 300) -> bool:
                 continue
             if not job.get("enabled", True) or job.get("state") == "paused":
                 return False
-            now = _hermes_now()
+            now = _papylonation_now()
             existing = job.get("fire_claim")
             if existing:
                 try:
@@ -1820,7 +1820,7 @@ def get_due_jobs() -> List[Dict[str, Any]]:
 
 def _get_due_jobs_locked() -> List[Dict[str, Any]]:
     """Inner implementation of get_due_jobs(); must be called with _jobs_lock held."""
-    now = _hermes_now()
+    now = _papylonation_now()
     raw_jobs = load_jobs()
     needs_save = False
 
@@ -2155,7 +2155,7 @@ def _get_due_jobs_locked() -> List[Dict[str, Any]]:
 
 
 # Per-run cron output (`cron/output/<job>/<timestamp>.md`) is written once per
-# execution. Unlike the quick-snapshot store (`hermes_cli.backup`, capped at 20)
+# execution. Unlike the quick-snapshot store (`papylonation_cli.backup`, capped at 20)
 # it had no retention, so a frequently-scheduled job on a long-running deploy
 # accumulated one file per run forever and could fill the disk (#52383). Keep the
 # most recent N files per job; a non-positive value disables pruning (opt-out).
@@ -2165,7 +2165,7 @@ _CRON_OUTPUT_DEFAULT_KEEP = 50
 def _cron_output_keep() -> int:
     """Resolve the per-job output-file retention cap from config (``cron.output_retention``)."""
     try:
-        from hermes_cli.config import load_config
+        from papylonation_cli.config import load_config
         cfg = load_config() or {}
         cron_cfg = cfg.get("cron", {}) if isinstance(cfg, dict) else {}
         return int(cron_cfg.get("output_retention", _CRON_OUTPUT_DEFAULT_KEEP))
@@ -2176,7 +2176,7 @@ def _cron_output_keep() -> int:
 def _prune_job_output(job_output_dir: Path, keep: int) -> int:
     """Remove the oldest ``*.md`` run-output files beyond *keep*. Returns count deleted.
 
-    Mirrors the quick-snapshot retention in ``hermes_cli.backup._prune_quick_snapshots``:
+    Mirrors the quick-snapshot retention in ``papylonation_cli.backup._prune_quick_snapshots``:
     output filenames are timestamp-based (``%Y-%m-%d_%H-%M-%S.md``) so a reverse
     lexical sort orders newest-first, and everything past *keep* is the tail to
     drop. A non-positive *keep* disables pruning. Pruning failures are swallowed
@@ -2209,7 +2209,7 @@ def save_job_output(job_id: str, output: str):
     job_output_dir.mkdir(parents=True, exist_ok=True)
     _secure_dir(job_output_dir)
 
-    timestamp = _hermes_now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = _papylonation_now().strftime("%Y-%m-%d_%H-%M-%S")
     output_file = job_output_dir / f"{timestamp}.md"
 
     fd, tmp_path = tempfile.mkstemp(dir=str(job_output_dir), suffix='.tmp', prefix='.output_')

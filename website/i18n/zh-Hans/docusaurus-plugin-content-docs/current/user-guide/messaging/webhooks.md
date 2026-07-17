@@ -185,7 +185,7 @@ print(json.dumps(payload))
 
 - stdout 为 JSON 对象时，替换 `prompt` 和 `deliver_extra` 使用的 payload。
 - 非 JSON 文本 stdout 会以 `script_output` 字段加入 payload。
-- 空 stdout、精确的 `[SILENT]`、`{"__hermes_ignore__": true}`、超时、脚本缺失或非零退出码，均返回 HTTP 200 及 `{"status":"ignored","reason":"script"}`。
+- 空 stdout、精确的 `[SILENT]`、`{"__papylonation_ignore__": true}`、超时、脚本缺失或非零退出码，均返回 HTTP 200 及 `{"status":"ignored","reason":"script"}`。
 
 ### Prompt 模板
 

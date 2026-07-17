@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from hermes_cli.runtime_provider import (
+from papylonation_cli.runtime_provider import (
     _VALID_API_MODES,
     _maybe_apply_codex_app_server_runtime,
 )
@@ -298,7 +298,7 @@ class TestSpawnEnvIsolation:
 
 
 class TestSpawnEnvSecretStripping:
-    """codex app-server routes its spawn env through hermes_subprocess_env(
+    """codex app-server routes its spawn env through papylonation_subprocess_env(
     inherit_credentials=True) instead of a raw os.environ.copy().
 
     codex is a model-driving CLI executor: it legitimately needs LLM provider
@@ -373,7 +373,7 @@ class TestSpawnEnvSecretStripping:
         assert env.get("OPENAI_API_KEY") == "sk-codex-needs-this"
 
     def test_home_still_preserved_through_helper(self, monkeypatch):
-        """Regression guard: routing through hermes_subprocess_env must not
+        """Regression guard: routing through papylonation_subprocess_env must not
         rewrite HOME (codex's shell tool spawns gh/git/aws that need it)."""
         monkeypatch.setenv("HOME", "/users/alice")
         env = self._capture_spawn_env(monkeypatch)

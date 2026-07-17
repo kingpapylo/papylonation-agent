@@ -23,21 +23,21 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @pytest.fixture
 def cron_env(tmp_path, monkeypatch):
     """Isolated cron environment with temp HERMES_HOME."""
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    (hermes_home / "cron").mkdir()
-    (hermes_home / "cron" / "output").mkdir()
-    (hermes_home / "scripts").mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    papylonation_home = tmp_path / ".hermes"
+    papylonation_home.mkdir()
+    (papylonation_home / "cron").mkdir()
+    (papylonation_home / "cron" / "output").mkdir()
+    (papylonation_home / "scripts").mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(papylonation_home))
 
     # Clear cached module-level paths
     import cron.jobs as jobs_mod
-    monkeypatch.setattr(jobs_mod, "HERMES_DIR", hermes_home)
-    monkeypatch.setattr(jobs_mod, "CRON_DIR", hermes_home / "cron")
-    monkeypatch.setattr(jobs_mod, "JOBS_FILE", hermes_home / "cron" / "jobs.json")
-    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", hermes_home / "cron" / "output")
+    monkeypatch.setattr(jobs_mod, "HERMES_DIR", papylonation_home)
+    monkeypatch.setattr(jobs_mod, "CRON_DIR", papylonation_home / "cron")
+    monkeypatch.setattr(jobs_mod, "JOBS_FILE", papylonation_home / "cron" / "jobs.json")
+    monkeypatch.setattr(jobs_mod, "OUTPUT_DIR", papylonation_home / "cron" / "output")
 
-    return hermes_home
+    return papylonation_home
 
 
 class TestJobScriptField:
@@ -91,7 +91,7 @@ def test_cronjob_tool_rejects_stale_past_one_shot(cron_env, monkeypatch):
     from tools.cronjob_tools import cronjob
 
     now = datetime(2026, 3, 18, 4, 30, 0, tzinfo=timezone.utc)
-    monkeypatch.setattr("cron.jobs._hermes_now", lambda: now)
+    monkeypatch.setattr("cron.jobs._papylonation_now", lambda: now)
     stale = (now - timedelta(minutes=5)).isoformat()
 
     result = json.loads(cronjob(action="create", prompt="Too late", schedule=stale))

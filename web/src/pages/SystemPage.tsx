@@ -848,7 +848,7 @@ export default function SystemPage() {
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Hermes</div>
                 <div className="flex items-center gap-2">
-                  <span>v{stats?.hermes_version}</span>
+                  <span>v{stats?.papylonation_version}</span>
                   {canUpdateHermes &&
                     updateInfo &&
                     (updateInfo.update_available ? (
