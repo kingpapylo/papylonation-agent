@@ -1,11 +1,6 @@
-#!/usr/bin/env python3
-"""
-Hermes Agent CLI launcher.
-
-This wrapper should behave like the installed `hermes` command, including
-subcommands such as `gateway`, `cron`, and `doctor`.
-"""
-
-if __name__ == "__main__":
-    from hermes_cli.main import main
-    main()
+#!/usr/bin/env bash
+# Repo-root dev launcher for PapyloNation Agent.
+# Re-exec the bundled venv so deps (yaml, etc.) resolve the same way as the
+# installed `papylonation`/`hermes` command.
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$DIR/venv/bin/hermes" "$@"

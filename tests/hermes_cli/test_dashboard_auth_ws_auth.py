@@ -27,7 +27,7 @@ from papylonation_cli.dashboard_auth.ws_tickets import (
     internal_ws_credential,
     mint_ticket,
 )
-from tests.papylonation_cli.conftest_dashboard_auth import StubAuthProvider
+from tests.hermes_cli.conftest_dashboard_auth import StubAuthProvider
 
 
 # ---------------------------------------------------------------------------
