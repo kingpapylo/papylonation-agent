@@ -2340,7 +2340,7 @@ def cmd_chat(args):
     if not _has_any_provider_configured():
         print()
         print(
-            "It looks like Hermes isn't configured yet -- no API keys or providers found."
+            "It looks like PapyloNation Agent isn't configured yet -- no API keys or providers found."
         )
         print()
         print("  Run:  hermes setup")
