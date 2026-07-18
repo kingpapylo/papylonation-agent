@@ -3512,10 +3512,10 @@ def _build_compact_banner() -> str:
     dim_color = _skin.get_color("banner_dim", "#B8860B") if _skin else "#B8860B"
 
     if skin_name == "default":
-        line1 = "⚕ NOUS HERMES - AI Agent Framework"
-        tiny_line = "⚕ NOUS HERMES"
+        line1 = "⚕ PAPYLONATION - AI Agent Framework"
+        tiny_line = "⚕ PAPYLONATION"
     else:
-        agent_name = _skin.get_branding("agent_name", "Hermes Agent") if _skin else "Hermes Agent"
+        agent_name = _skin.get_branding("agent_name", "PapyloNation Agent") if _skin else "PapyloNation Agent"
         line1 = f"{agent_name} - AI Agent Framework"
         tiny_line = agent_name
 
@@ -3523,7 +3523,7 @@ def _build_compact_banner() -> str:
         from papylonation_cli import __release_date__ as _release_date
         from papylonation_cli import __version__ as _version
 
-        version_line = f"Hermes Agent v{_version} ({_release_date})"
+        version_line = f"PapyloNation Agent v{_version} ({_release_date})"
     else:
         version_line = format_banner_version_label()
 
@@ -6261,7 +6261,7 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
             self._console_print()
             self._console_print(
                 "[bold yellow]⚠  Nous Research Hermes 3 & 4 models are NOT agentic and are not "
-                "designed for use with Hermes Agent.[/]"
+                "designed for use with PapyloNation Agent.[/]"
             )
             self._console_print(
                 "[dim]   They lack tool-calling capabilities required for agent workflows. "
@@ -11460,7 +11460,9 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
                     self._voice_continuous = False
                     self._no_speech_count = 0
                     _cprint(f"{_DIM}No speech detected 3 times, continuous mode stopped.{_RST}")
-                    return
+                    # No return here: setting _voice_continuous=False already
+                    # prevents the restart block below. (A `return` inside a
+                    # `finally` swallows exceptions and warns under py3.14.)
             else:
                 self._no_speech_count = 0
 
@@ -13399,10 +13401,10 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
         try:
             from papylonation_cli.skin_engine import get_active_skin
             _welcome_skin = get_active_skin()
-            _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to Hermes Agent! Type your message or /help for commands.")
+            _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to PapyloNation Agent! Type your message or /help for commands.")
             _welcome_color = _welcome_skin.get_color("banner_text", "#FFF8DC")
         except Exception:
-            _welcome_text = "Welcome to Hermes Agent! Type your message or /help for commands."
+            _welcome_text = "Welcome to PapyloNation Agent! Type your message or /help for commands."
             _welcome_color = "#FFF8DC"
         self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
 
@@ -14246,7 +14248,7 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
             import signal as _sig
             from prompt_toolkit.application import run_in_terminal
             from papylonation_cli.skin_engine import get_active_skin
-            agent_name = get_active_skin().get_branding("agent_name", "Hermes Agent")
+            agent_name = get_active_skin().get_branding("agent_name", "PapyloNation Agent")
             msg = f"\n{agent_name} has been suspended. Run `fg` to bring {agent_name} back."
             def _suspend():
                 os.write(1, msg.encode())
