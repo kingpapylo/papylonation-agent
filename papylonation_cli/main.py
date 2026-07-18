@@ -244,8 +244,9 @@ def _read_openai_version_fast() -> str | None:
 def _print_fast_version_info() -> None:
     from papylonation_cli import __release_date__, __version__
 
-    print(f"Hermes Agent v{__version__} ({__release_date__})")
-    print(f"Install directory: {PROJECT_ROOT}")
+    _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    print(f"PapyloNation Agent v{__version__} ({__release_date__})")
+    print(f"Install directory: {_project_root}")
 
     print(f"Python: {sys.version.split()[0]}")
 
@@ -2702,14 +2703,14 @@ def cmd_whatsapp(args):
             print("    2. Send a message to the bot's WhatsApp number")
             print("    3. The agent will reply automatically")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ PapyloNation Agent'")
         else:
             print("  Next steps:")
             print("    1. Start the gateway:  hermes gateway")
             print("    2. Open WhatsApp → Message Yourself")
             print("    3. Type a message — the agent will reply")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ PapyloNation Agent'")
             print("  so you can tell them apart from your own messages.")
         print()
         print("  Or install as a service: hermes gateway install")
